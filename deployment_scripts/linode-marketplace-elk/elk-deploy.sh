@@ -204,7 +204,7 @@ function provisioner_vars {
   sed 's/  //g' <<EOF > ${group_vars}
   # provisioner vars
   provisioner_ssh_pubkey: "${PROVISIONER_SSH_PUB_KEY}"
-  provisioner: ${INSTANCE_PREFIX}-${UUID}
+  provisioner: kibana-${UUID}
   provisioner_prefix: ${INSTANCE_PREFIX}
   type: ${LINODE_PARAMS[0]}
   region: ${LINODE_PARAMS[1]}
