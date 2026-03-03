@@ -6,11 +6,11 @@ exec > >(tee /dev/ttyS0 /var/log/stackscript.log) 2>&1
 # modes
 #DEBUG="NO"
 if [[ -n ${DEBUG} ]]; then
-  if [ "${DEBUG}" == "NO" ]; then
-    trap "cleanup $? $LINENO" EXIT
-  fi
+	if [ "${DEBUG}" == "NO" ]; then
+		trap "cleanup $? $LINENO" EXIT
+	fi
 else
-  trap "cleanup $? $LINENO" EXIT
+	trap "cleanup $? $LINENO" EXIT
 fi
 
 # cleanup will always happen. If DEBUG is passed and is anything
@@ -18,9 +18,9 @@ fi
 # ci testing and passing vars to the instance.
 
 if [ "${MODE}" == "staging" ]; then
-  trap "provision_failed $? $LINENO" ERR
+	trap "provision_failed $? $LINENO" ERR
 else
-  set -e
+	set -e
 fi
 
 ## Linode/SSH Security Settings
@@ -72,103 +72,102 @@ fi
 #BRANCH=""
 # git user and branch
 if [[ -n ${GH_USER} && -n ${BRANCH} ]]; then
-        echo "[info] git user and branch set.."
-        export GIT_REPO="https://github.com/${GH_USER}/marketplace-clusters.git"
+	echo "[info] git user and branch set.."
+	export GIT_REPO="https://github.com/${GH_USER}/marketplace-clusters.git"
 else
-        export GH_USER="akamai-compute-marketplace"
-        export BRANCH="main"
-        export GIT_REPO="https://github.com/${GH_USER}/marketplace-clusters.git"
+	export GH_USER="akamai-compute-marketplace"
+	export BRANCH="main"
+	export GIT_REPO="https://github.com/${GH_USER}/marketplace-clusters.git"
 fi
 
-export WORK_DIR="/tmp/marketplace-clusters" 
-export MARKETPLACE_APP="apps/clusters/linode-marketplace-elk"
+export WORK_DIR="/tmp/marketplace-clusters"
+export MARKETPLACE_APP="apps/linode-marketplace-elk"
 export UUID=$(uuidgen | awk -F - '{print $1}')
 
 function provision_failed {
-  echo "[info] Provision failed. Sending status.."
+	echo "[info] Provision failed. Sending status.."
 
-  # dep
-  apt install jq -y
+	# dep
+	apt install jq -y
 
-  # set token
-  local token=($(curl -ks -X POST ${KC_SERVER} \
-     -H "Content-Type: application/json" \
-     -d "{ \"username\":\"${KC_USERNAME}\", \"password\":\"${KC_PASSWORD}\" }" | jq -r .token) )
+	# set token
+	local token=($(curl -ks -X POST ${KC_SERVER} \
+		-H "Content-Type: application/json" \
+		-d "{ \"username\":\"${KC_USERNAME}\", \"password\":\"${KC_PASSWORD}\" }" | jq -r .token))
 
-  # send pre-provision failure
-  curl -sk -X POST ${DATA_ENDPOINT} \
-     -H "Authorization: ${token}" \
-     -H "Content-Type: application/json" \
-     -d "{ \"app_label\":\"${APP_LABEL}\", \"status\":\"provision_failed\", \"branch\": \"${BRANCH}\", \
+	# send pre-provision failure
+	curl -sk -X POST ${DATA_ENDPOINT} \
+		-H "Authorization: ${token}" \
+		-H "Content-Type: application/json" \
+		-d "{ \"app_label\":\"${APP_LABEL}\", \"status\":\"provision_failed\", \"branch\": \"${BRANCH}\", \
         \"gituser\": \"${GH_USER}\", \"runjob\": \"${RUNJOB}\", \"image\":\"${IMAGE}\", \
         \"type\":\"${TYPE}\", \"region\":\"${REGION}\", \"instance_env\":\"${INSTANCE_ENV}\" }"
-  
-  exit $?
+
+	exit $?
 }
 
 function cleanup {
-  if [ "$?" != "0" ]; then
-    echo "PLAYBOOK FAILED. See /var/log/stackscript.log for details."
-    echo "[info] Running Destroy playbook"
-    destroy
-  fi
+	if [ "$?" != "0" ]; then
+		echo "PLAYBOOK FAILED. See /var/log/stackscript.log for details."
+		echo "[info] Running Destroy playbook"
+		destroy
+	fi
 
-  # provisioner keys
-  if [[ -f ${HOME}/.ssh/id_ansible_ed25519{,.pub} ]]; then
-    echo "[info] Removing provisioner keys.."
-    rm ${HOME}/.ssh/id_ansible_ed25519{,.pub}
-  fi
+	# provisioner keys
+	if [[ -f "${HOME}/.ssh/id_ansible_ed25519" || -f "${HOME}/.ssh/id_ansible_ed25519.pub" ]]; then
+		echo "[info] Removing provisioner keys.."
+		rm -f "${HOME}/.ssh/id_ansible_ed25519" "${HOME}/.ssh/id_ansible_ed25519.pub"
+	fi
 
-  if [ -d "${WORK_DIR}" ]; then
-    echo "[info] Cleanup - Removing ${WORK_DIR}"
-    rm -rf ${WORK_DIR}
-  fi
+	if [ -d "${WORK_DIR}" ]; then
+		echo "[info] Cleanup - Removing ${WORK_DIR}"
+		rm -rf ${WORK_DIR}
+	fi
 }
 
 # INSTANCE SETUP #
 
 function add_privateip {
-  echo "[info] Adding instance private IP"
-  curl -H "Content-Type: application/json" \
-      -H "Authorization: Bearer ${TOKEN_PASSWORD}" \
-      -X POST -d '{
+	echo "[info] Adding instance private IP"
+	curl -H "Content-Type: application/json" \
+		-H "Authorization: Bearer ${TOKEN_PASSWORD}" \
+		-X POST -d '{
         "type": "ipv4",
         "public": false
       }' \
-      https://api.linode.com/v4/linode/instances/${LINODE_ID}/ips
+		https://api.linode.com/v4/linode/instances/${LINODE_ID}/ips
 }
 
 function get_privateip {
-  curl -s -H "Content-Type: application/json" \
-    -H "Authorization: Bearer ${TOKEN_PASSWORD}" \
-   https://api.linode.com/v4/linode/instances/${LINODE_ID}/ips | \
-   jq -r '.ipv4.private[].address'
+	curl -s -H "Content-Type: application/json" \
+		-H "Authorization: Bearer ${TOKEN_PASSWORD}" \
+		https://api.linode.com/v4/linode/instances/${LINODE_ID}/ips |
+		jq -r '.ipv4.private[].address'
 }
 
 function configure_privateip {
-  LINODE_IP=$(get_privateip)
-  if [ ! -z "${LINODE_IP}" ]; then
-          echo "[info] Linode private IP present"
-  else
-          echo "[warn] No private IP found. Adding.."
-          add_privateip
-          LINODE_IP=$(get_privateip)
-          ip addr add ${LINODE_IP}/17 dev eth0 label eth0:1
-  fi
+	LINODE_IP=$(get_privateip)
+	if [ ! -z "${LINODE_IP}" ]; then
+		echo "[info] Linode private IP present"
+	else
+		echo "[warn] No private IP found. Adding.."
+		add_privateip
+		LINODE_IP=$(get_privateip)
+		ip addr add ${LINODE_IP}/17 dev eth0 label eth0:1
+	fi
 }
 
 function rename_provisioner {
-  INSTANCE_PREFIX=$(curl -sH "Authorization: Bearer ${TOKEN_PASSWORD}" "https://api.linode.com/v4/linode/instances/${LINODE_ID}" | jq -r .label)
-  export INSTANCE_PREFIX="${INSTANCE_PREFIX}"
-  echo "[info] renaming the provisioner"
-  curl -s -H "Content-Type: application/json" \
-      -H "Authorization: Bearer ${TOKEN_PASSWORD}" \
-      -X PUT -d "{
+	INSTANCE_PREFIX=$(curl -sH "Authorization: Bearer ${TOKEN_PASSWORD}" "https://api.linode.com/v4/linode/instances/${LINODE_ID}" | jq -r .label)
+	export INSTANCE_PREFIX="${INSTANCE_PREFIX}"
+	echo "[info] renaming the provisioner"
+	curl -s -H "Content-Type: application/json" \
+		-H "Authorization: Bearer ${TOKEN_PASSWORD}" \
+		-X PUT -d "{
         \"label\": \"kibana-${UUID}\"
       }" \
-      https://api.linode.com/v4/linode/instances/${LINODE_ID}
+		https://api.linode.com/v4/linode/instances/${LINODE_ID}
 }
-
 
 # PROVISIONER SETUP
 
@@ -180,28 +179,28 @@ readonly group_vars="${WORK_DIR}/${MARKETPLACE_APP}/group_vars/linode/vars"
 
 # destroys all instances except provisioner node
 function destroy {
-  cd ${WORK_DIR}/${MARKETPLACE_APP}
-  source env/bin/activate  
-  echo "[info] Destroying cluster nodes except provisioner..."
-  ansible-playbook -v destroy.yml
+	cd ${WORK_DIR}/${MARKETPLACE_APP}
+	source env/bin/activate
+	echo "[info] Destroying cluster nodes except provisioner..."
+	ansible-playbook -v destroy.yml
 }
 
 function provisioner_sshkey {
-  echo "[info] Creating provisioner SSH keys..."
-  ssh-keygen -o -a 100 -t ed25519 -C "provisioner" -f "${HOME}/.ssh/id_ansible_ed25519" -q -N "" <<<y >/dev/null
-  export PROVISIONER_SSH_PUB_KEY=$(cat ${HOME}/.ssh/id_ansible_ed25519.pub)
-  export PROVISIONER_SSH_PRIV_KEY=$(cat ${HOME}/.ssh/id_ansible_ed25519)
-  export SSH_KEY_PATH="${HOME}/.ssh/id_ansible_ed25519"
-  chmod 700 ${HOME}/.ssh
-  chmod 600 ${SSH_KEY_PATH}
-  eval $(ssh-agent)
-  ssh-add ${SSH_KEY_PATH}
-  echo -e "\nprivate_key_file = ${SSH_KEY_PATH}" >> ${WORK_DIR}/${MARKETPLACE_APP}/ansible.cfg
+	echo "[info] Creating provisioner SSH keys..."
+	ssh-keygen -o -a 100 -t ed25519 -C "provisioner" -f "${HOME}/.ssh/id_ansible_ed25519" -q -N "" <<<y >/dev/null
+	export PROVISIONER_SSH_PUB_KEY=$(cat ${HOME}/.ssh/id_ansible_ed25519.pub)
+	export PROVISIONER_SSH_PRIV_KEY=$(cat ${HOME}/.ssh/id_ansible_ed25519)
+	export SSH_KEY_PATH="${HOME}/.ssh/id_ansible_ed25519"
+	chmod 700 ${HOME}/.ssh
+	chmod 600 ${SSH_KEY_PATH}
+	eval $(ssh-agent)
+	ssh-add ${SSH_KEY_PATH}
+	echo -e "\nprivate_key_file = ${SSH_KEY_PATH}" >>${WORK_DIR}/${MARKETPLACE_APP}/ansible.cfg
 }
 
 function provisioner_vars {
-# Adds variables to configure cluster instances.
-  sed 's/  //g' <<EOF > ${group_vars}
+	# Adds variables to configure cluster instances.
+	sed 's/  //g' <<EOF >${group_vars}
   # provisioner vars
   provisioner_ssh_pubkey: "${PROVISIONER_SSH_PUB_KEY}"
   provisioner: kibana-${UUID}
@@ -220,7 +219,7 @@ EOF
 # UDF SETUP
 
 function udf {
-  sed 's/  //g' <<EOF >> ${group_vars}
+	sed 's/  //g' <<EOF >>${group_vars}
   # sudo username
   username: ${USER_NAME}
 
@@ -236,105 +235,105 @@ function udf {
   soa_email_address: ${SOA_EMAIL_ADDRESS}
 EOF
 
-  if [ "$DISABLE_ROOT" = "Yes" ]; then
-    echo "disable_root: yes" >> ${group_vars}
-  else 
-    echo "Leaving root login enabled"
-  fi
-  if [[ -n ${DOMAIN} ]]; then
-    echo "domain: ${DOMAIN}" >> ${group_vars}
-  else
-    echo "default_dns: $(hostname -I | awk '{print $1}'| tr '.' '-' | awk {'print $1 ".ip.linodeusercontent.com"'})" >> ${group_vars}
-  fi
-  if [[ -n ${SUBDOMAIN} ]]; then
-    echo "subdomain: ${SUBDOMAIN}" >> ${group_vars}
-  else 
-    echo "subdomain: www" >> ${group_vars}
-  fi
-  if [[ -n ${DEBUG} ]]; then
-    echo "[info] debug ${DEBUG} passed"
-    echo "debug: ${DEBUG}" >> ${group_vars}
-  fi
+	if [ "$DISABLE_ROOT" = "Yes" ]; then
+		echo "disable_root: yes" >>${group_vars}
+	else
+		echo "Leaving root login enabled"
+	fi
+	if [[ -n ${DOMAIN} ]]; then
+		echo "domain: ${DOMAIN}" >>${group_vars}
+	else
+		echo "default_dns: $(hostname -I | awk '{print $1}' | tr '.' '-' | awk {'print $1 ".ip.linodeusercontent.com"'})" >>${group_vars}
+	fi
+	if [[ -n ${SUBDOMAIN} ]]; then
+		echo "subdomain: ${SUBDOMAIN}" >>${group_vars}
+	else
+		echo "subdomain: www" >>${group_vars}
+	fi
+	if [[ -n ${DEBUG} ]]; then
+		echo "[info] debug ${DEBUG} passed"
+		echo "debug: ${DEBUG}" >>${group_vars}
+	fi
 
-  # ELK vars
+	# ELK vars
 
-  if [[ -n ${CLUSTER_NAME} ]]; then
-    echo "cluster_name: ${CLUSTER_NAME}" >> ${group_vars}
-  fi
-  if [[ -n ${CLUSTER_SIZE} ]]; then
-    echo "kibana_cluster_size: ${CLUSTER_SIZE}" >> ${group_vars}
-  fi
-  if [[ -n ${ELASTICSEARCH_CLUSTER_SIZE} ]]; then
-    echo "elasticsearch_cluster_size: ${ELASTICSEARCH_CLUSTER_SIZE}" >> ${group_vars}
-  fi
-  if [[ -n ${LOGSTASH_CLUSTER_SIZE} ]]; then
-    echo "logstash_cluster_size: ${LOGSTASH_CLUSTER_SIZE}" >> ${group_vars}
-  fi
-  if [[ -n ${ELASTICSEARCH_CLUSTER_TYPE} ]]; then
-    echo "elasticsearch_cluster_type: ${ELASTICSEARCH_CLUSTER_TYPE}" >> ${group_vars}
-  fi
-  if [[ -n ${LOGSTASH_CLUSTER_TYPE} ]]; then
-    echo "logstash_cluster_type: ${LOGSTASH_CLUSTER_TYPE}" >> ${group_vars}
-  fi      
-  if [[ -z ${BEATS_ALLOW} ]]; then
-    echo "[info] No IP addresses provided for beat"
-  else
-    echo "beats_allow: [${BEATS_ALLOW}]" >> ${group_vars}
-  fi
-  if [[ -n ${LOGSTASH_INGEST_USERNAME} ]]; then
-    echo "logstash_ingest_username: ${LOGSTASH_INGEST_USERNAME}" >> ${group_vars}
-  fi
-  if [[ -n ${ELASTICSEARCH_INDEX_NAME} ]]; then
-    echo "elasticsearch_index_name: ${ELASTICSEARCH_INDEX_NAME}" >> ${group_vars}
-  fi
+	if [[ -n ${CLUSTER_NAME} ]]; then
+		echo "cluster_name: ${CLUSTER_NAME}" >>${group_vars}
+	fi
+	if [[ -n ${CLUSTER_SIZE} ]]; then
+		echo "kibana_cluster_size: ${CLUSTER_SIZE}" >>${group_vars}
+	fi
+	if [[ -n ${ELASTICSEARCH_CLUSTER_SIZE} ]]; then
+		echo "elasticsearch_cluster_size: ${ELASTICSEARCH_CLUSTER_SIZE}" >>${group_vars}
+	fi
+	if [[ -n ${LOGSTASH_CLUSTER_SIZE} ]]; then
+		echo "logstash_cluster_size: ${LOGSTASH_CLUSTER_SIZE}" >>${group_vars}
+	fi
+	if [[ -n ${ELASTICSEARCH_CLUSTER_TYPE} ]]; then
+		echo "elasticsearch_cluster_type: ${ELASTICSEARCH_CLUSTER_TYPE}" >>${group_vars}
+	fi
+	if [[ -n ${LOGSTASH_CLUSTER_TYPE} ]]; then
+		echo "logstash_cluster_type: ${LOGSTASH_CLUSTER_TYPE}" >>${group_vars}
+	fi
+	if [[ -z ${BEATS_ALLOW} ]]; then
+		echo "[info] No IP addresses provided for beat"
+	else
+		echo "beats_allow: [${BEATS_ALLOW}]" >>${group_vars}
+	fi
+	if [[ -n ${LOGSTASH_INGEST_USERNAME} ]]; then
+		echo "logstash_ingest_username: ${LOGSTASH_INGEST_USERNAME}" >>${group_vars}
+	fi
+	if [[ -n ${ELASTICSEARCH_INDEX_NAME} ]]; then
+		echo "elasticsearch_index_name: ${ELASTICSEARCH_INDEX_NAME}" >>${group_vars}
+	fi
 
-  # staging or production mode (ci)
-  if [[ "${MODE}" == "staging" ]]; then
-    echo "[info] running in staging mode..."
-    echo "mode: ${MODE}" >> ${group_vars}
-  else
-    echo "[info] running in production mode..."
-    echo "mode: production" >> ${group_vars}
-  fi  
+	# staging or production mode (ci)
+	if [[ "${MODE}" == "staging" ]]; then
+		echo "[info] running in staging mode..."
+		echo "mode: ${MODE}" >>${group_vars}
+	else
+		echo "[info] running in production mode..."
+		echo "mode: production" >>${group_vars}
+	fi
 }
 
 # COMPLETE
 function installation_complete {
-  echo "Installation Complete!"
+	echo "Installation Complete!"
 }
 
 # MAIN
 
 function run {
-  # install dependencies
-  export DEBIAN_FRONTEND=noninteractive
-  apt-get update && apt-get upgrade -y
-  apt-get install -y jq git python3 python3-pip python3-venv
+	# install dependencies
+	export DEBIAN_FRONTEND=noninteractive
+	apt-get update && apt-get upgrade -y
+	apt-get install -y jq git python3 python3-pip python3-venv
 
-  # add private IP address
-  rename_provisioner
-  configure_privateip
+	# add private IP address
+	rename_provisioner
+	configure_privateip
 
-  # clone repo and set up Ansible environment
-  echo "[info] Cloning ${BRANCH} branch from ${GIT_REPO}..."
-  git -C /tmp clone -b ${BRANCH} ${GIT_REPO}
-  cd ${WORK_DIR}/${MARKETPLACE_APP}
-  python3 -m venv env
-  source env/bin/activate
-  pip install pip --upgrade
-  pip install -r requirements.txt
-  ansible-galaxy install -r collections.yml
+	# clone repo and set up Ansible environment
+	echo "[info] Cloning ${BRANCH} branch from ${GIT_REPO}..."
+	git -C /tmp clone -b ${BRANCH} ${GIT_REPO}
+	cd ${WORK_DIR}/${MARKETPLACE_APP}
+	python3 -m venv env
+	source env/bin/activate
+	pip install pip --upgrade
+	pip install -r requirements.txt
+	ansible-galaxy install -r collections.yml
 
-  # populate group_vars
-  provisioner_sshkey
-  provisioner_vars
-  udf
+	# populate group_vars
+	provisioner_sshkey
+	provisioner_vars
+	udf
 
-  # update plan label with plan typeId
-  python3 plan_typeid.py
+	# update plan label with plan typeId
+	python3 plan_typeid.py
 
-  # run playbooks
-  ansible-playbook -v provision.yml && ansible-playbook -v -i hosts site.yml
+	# run playbooks
+	ansible-playbook -v provision.yml && ansible-playbook -v -i hosts site.yml
 }
 
 # main
