@@ -40,6 +40,7 @@ debian_deploy() {
    export GH_USER=$GH_USER
    export APP_NAME=$APP_NAME
    export DEPLOYMENT_SCRIPT=$DEPLOYMENT_SCRIPT
+   export UUID=$UUID
 
    sudo apt update
    sudo apt install -y git
@@ -79,6 +80,7 @@ rhel_deploy() {
    export GH_USER=$GH_USER
    export APP_NAME=$APP_NAME
    export DEPLOYMENT_SCRIPT=$DEPLOYMENT_SCRIPT
+   export UUID=$UUID
 
    dnf -y install git
    git clone --depth 1 --branch $BRANCH https://github.com/$GH_USER/marketplace-clusters.git /root/repo

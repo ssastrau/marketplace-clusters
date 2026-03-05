@@ -82,7 +82,10 @@ fi
 
 export WORK_DIR="/tmp/marketplace-clusters"
 export MARKETPLACE_APP="apps/linode-marketplace-elk"
-export UUID=$(uuidgen | awk -F - '{print $1}')
+
+if [ -z "${UUID}" ]; then
+  export UUID=$(uuidgen | awk -F - '{print $1}')
+fi
 
 function provision_failed {
 	echo "[info] Provision failed. Sending status.."
