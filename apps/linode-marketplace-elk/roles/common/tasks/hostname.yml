@@ -1,0 +1,46 @@
+---
+- name: Update /etc/hosts file
+  blockinfile:
+    path: /etc/hosts
+    marker: "# {mark} ELK STACK"
+    block: |
+      #jinja2: trim_blocks:False
+      {%- for count in range(kibana_cluster_size) %}
+      {{ data.kibana[count].instance.ip_priv1 }} {{ data.kibana[count].instance.hostname }} kibana-{{ count + 1 }}
+      {%- endfor %}
+      {%- for count in range(elasticsearch_cluster_size) %}
+      {{ data.elasticsearch[count].instance.ip_priv1 }} {{ data.elasticsearch[count].instance.hostname }} elasticsearch-{{ count + 1 }}
+      {%- endfor %}
+      {%- for count in range(logstash_cluster_size) %}
+      {{ data.logstash[count].instance.ip_priv1 }} {{ data.logstash[count].instance.hostname }} logstash-{{ count + 1 }}
+      {%- endfor %}
+
+- name: Configure hostnames for Kibana
+  hostname:
+    use: systemd
+    name: "{{ data.kibana[count].instance.hostname }}"
+  run_once: true
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['provisioner'] }}"
+  loop_control:
+    index_var: count
+
+- name: Configure hostnames for Elasticsearch
+  hostname:
+    use: systemd
+    name: "{{ data.elasticsearch[count].instance.hostname }}"
+  run_once: true
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['elasticsearch'] }}"
+  loop_control:
+    index_var: count
+
+- name: Configure hostnames for Logstash
+  hostname:
+    use: systemd
+    name: "{{ data.logstash[count].instance.hostname }}"
+  run_once: true
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['logstash'] }}"
+  loop_control:
+    index_var: count

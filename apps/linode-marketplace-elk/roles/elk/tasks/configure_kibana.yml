@@ -1,0 +1,44 @@
+---
+- name: Backup Kibana config
+  copy:
+    src: "{{ kibana_config }}"
+    dest: "{{ kibana_config }}.bak"
+    remote_src: true
+    owner: kibana
+    group: kibana
+    mode: '0644'
+  run_once: true
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['provisioner'] }}"
+
+- name: Generate Kibana encryption keys
+  shell:
+    cmd: |
+      /usr/share/kibana/bin/kibana-encryption-keys generate
+  no_log: true
+  run_once: true
+  delegate_to: localhost
+  register: kibana_encryption_keys
+
+- name: Update Kibana config
+  template:
+    src: templates/kibana.yml.j2
+    dest: "{{ kibana_config }}"
+    owner: kibana
+    group: kibana
+    mode: '0644'
+    trim_blocks: false
+  run_once: true
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['provisioner'] }}"
+  loop_control:
+    index_var: count
+
+- name: Restart Kibana
+  systemd_service:
+    name: kibana
+    state: restarted
+    enabled: true
+  run_once: true
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['provisioner'] }}"

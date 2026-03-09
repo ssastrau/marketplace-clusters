@@ -1,0 +1,27 @@
+---
+- name: Installing Elasticsearch
+  apt:
+    name: elasticsearch
+    state: present
+    update_cache: true
+  run_once: true
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['elasticsearch'] }}"
+
+- name: Installing Logstash
+  apt:
+    name: logstash
+    state: present
+    update_cache: true
+  run_once: true
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['logstash'] }}"
+
+- name: Installing Kibana
+  apt:
+    name: kibana
+    state: present
+    update_cache: true
+  run_once: true
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['provisioner'] }}"
