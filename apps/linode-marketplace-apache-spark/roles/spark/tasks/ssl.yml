@@ -1,0 +1,81 @@
+---
+- name: Install Certbot Nginx plugin
+  apt:
+    name: python3-certbot-nginx
+    state: present
+
+# certbot dry-runs
+- name: run dry-run for subdomain
+  shell:
+    cmd: "certbot -n --nginx --agree-tos --dry-run --redirect certonly -d {{ subdomain }}.{{ domain }} -m {{ soa_email_address }}"
+  register: dry_run
+  until: dry_run is not failed
+  retries: 3
+  delay: 3
+  ignore_errors: true
+  when: 
+    - domain is defined
+    - subdomain != 'www'  
+
+- name: run dry-run for tld and default subdomain
+  shell:
+    cmd: "certbot -n --nginx --agree-tos --dry-run --redirect certonly -d {{ domain }} -d {{ subdomain }}.{{ domain }} -m {{ soa_email_address }}"
+  register: dry_run
+  until: dry_run is not failed
+  retries: 3
+  delay: 3
+  ignore_errors: true
+  when:
+    - domain is defined
+    - subdomain == 'www' 
+
+- name: run dry-run for default domain
+  shell:
+    cmd: "certbot -n --nginx --agree-tos --dry-run --redirect certonly -d {{ _domain }} -m {{ soa_email_address }}"
+  register: dry_run
+  until: dry_run is not failed
+  retries: 3
+  delay: 3
+  ignore_errors: true
+  when: 
+  - domain is not defined
+
+- name: validate certbot dry-run
+  assert:
+    that: dry_run is not failed
+    fail_msg: "[Error] Certbot dry-run domain. Please check /var/log/letsencrypt/letsencrypt.log"
+    success_msg: "[Info] Certbot dry-run successful!"
+  run_once: true
+
+# ssl installation
+- name: installing let's encrypt certificate on subdomain provided via UDF
+  shell:
+    cmd: "certbot -n --nginx --agree-tos --redirect certonly -d {{ subdomain }}.{{ domain }} -m {{ soa_email_address }}"
+  when: 
+    - domain is defined
+    - subdomain != 'www'
+
+- name: installing let's encrypt certificate on tld and default subdomain provided via UDF
+  shell: 
+    cmd: "certbot -n --nginx --agree-tos --redirect certonly -d {{ domain }} -d {{ subdomain }}.{{ domain }} -m {{ soa_email_address }}"
+  when:
+    - domain is defined
+    - subdomain == 'www'
+
+- name: installing let's encrypt certificate on default domain
+  shell:
+    cmd: "certbot -n --nginx --agree-tos --redirect certonly -d {{ default_dns }} -m {{ soa_email_address }}"
+  when: 
+    - default_dns is defined
+
+- name: set up SSL certificate renewal cronjob
+  cron:
+    name: "Renew Let's Encrypt SSL certificates"
+    job: "/usr/bin/certbot renew --nginx --quiet --deploy-hook 'systemctl reload nginx'"
+    minute: "0"
+    hour: "3"
+    day: "1"
+    month: "*/3"
+    user: root
+  delegate_to: localhost
+  run_once: true

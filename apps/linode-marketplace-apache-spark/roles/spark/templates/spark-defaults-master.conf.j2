@@ -1,0 +1,11 @@
+spark.master spark://{{ spark_data.server[0].instance.ip_priv1 }}:7077
+spark.eventLog.enabled true
+spark.eventLog.dir file:////var/log/spark-events
+spark.history.fs.logDirectory file:////var/log/spark-events
+spark.master.ui.port 8480
+spark.ui.port 8481
+spark.ui.host {{ spark_data.server[0].instance.ip_priv1 }}
+spark.ssl.standalone.useNodeLocalHttps false
+spark.ssl.standalone.hostname {{ spark_data.server[0].instance.ip_priv1 }}
+spark.ui.reverseProxy true
+spark.ui.reverseProxyUrl https://{{ _domain }}

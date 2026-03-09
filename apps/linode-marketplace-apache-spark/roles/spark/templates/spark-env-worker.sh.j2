@@ -1,0 +1,7 @@
+# Template for spark-env.sh
+
+SPARK_MASTER_HOST={{ spark_data.server[0].instance.ip_priv1 }}
+SPARK_WORKER_OPTS="-Dspark.worker.host=0.0.0.0"
+SPARK_WORKER_MEMORY={{ ansible_memtotal_mb }}m
+SPARK_WORKER_INSTANCES=1
+SPARK_WORKER_CORES={{ ansible_processor_vcpus }}
