@@ -1,0 +1,10 @@
+---
+- name: start spark master
+  systemd:
+    name: spark-master
+    state: started
+
+- name: start spark workers
+  systemd:
+    name: spark-workers
+    state: started

@@ -1,0 +1,35 @@
+---
+# roles/spark/tasks/main.yml
+- name: configure hostname
+  import_tasks: hostname.yml
+  
+- name: create spark user
+  import_tasks: user.yml
+
+- name: generate ssh key pair for spark user
+  import_tasks: keypair.yml
+  run_once: true
+  delegate_to: localhost
+
+- name: create passwordless access to workers from master
+  import_tasks: passwordless.yml
+  run_once: true
+  delegate_to: localhost
+
+- name: install java, spark and scala
+  import_tasks: install_spark.yml
+
+- name: create and install ssl certificates
+  import_tasks: ssl.yml
+  delegate_to: localhost
+  run_once: true
+
+- name: install nginx for reverse proxy auth
+  import_tasks: nginx.yml
+  delegate_to: localhost
+  run_once: true
+
+- name: start spark
+  import_tasks: start_spark.yml
+  delegate_to: localhost
+  run_once: true

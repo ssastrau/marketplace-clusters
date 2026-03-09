@@ -1,0 +1,16 @@
+[Unit]
+Description=Apache Spark Workers
+After=network.target
+
+[Service]
+Type=simple
+User=spark
+Group=spark
+Environment="SPARK_SSH_OPTS=-i /opt/spark/.ssh/id_rsa -o StrictHostKeyChecking=no"
+ExecStart=/opt/spark/sbin/start-workers.sh spark://{{ spark_data.server[0].instance.ip_priv1 }}:7077
+ExecStop=/opt/spark/sbin/stop-workers.sh
+Restart=on-failure
+RemainAfterExit=yes
+      
+[Install]
+WantedBy=multi-user.target

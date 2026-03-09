@@ -1,0 +1,17 @@
+---
+# Spark Ansible playbook
+
+- name: configure Spark nodes
+  hosts: all
+  any_errors_fatal: true
+  user: root
+  vars:
+    local_home: "{{ lookup('env','HOME') }}"
+  vars_files:
+    - group_vars/spark/vars
+    - group_vars/spark/secret_vars
+
+  roles:
+    - common
+    - spark
+    - post
