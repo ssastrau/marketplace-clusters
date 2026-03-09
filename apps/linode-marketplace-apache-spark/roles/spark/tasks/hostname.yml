@@ -1,0 +1,27 @@
+---
+- name: update /etc/hosts
+  blockinfile:
+    path: /etc/hosts
+    marker: "# {mark} SPARK HOSTS"
+    block: |
+      #jinja2: trim_blocks:False
+      {%- for count in range(cluster_size | int) %}
+      {{ spark_data.server[count].instance.ip_priv1 }} {{ spark_data.server[count].instance.hostname }}
+      {%- endfor %}
+
+- name: Configure hostname on master
+  hostname:
+    use: systemd
+    name: "{{ spark_data.server[0].instance.hostname }}"
+  delegate_to: localhost
+  run_once: true
+
+- name: configure hostnames on workers
+  hostname:
+    use: systemd
+    name: "{{ spark_data.server[count + 1].instance.hostname }}"
+  run_once: true
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['spark_workers'] }}"
+  loop_control:
+    index_var: count
