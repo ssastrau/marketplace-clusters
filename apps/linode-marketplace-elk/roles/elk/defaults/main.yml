@@ -1,0 +1,15 @@
+---
+cluster_ssl_directory: "/root/cluster-certificates"
+cluster_ssl_ca_directory: "{{ cluster_ssl_directory }}/ca"
+
+# elasticsearch
+elasticsearch_ssl_directory: /etc/elasticsearch/certs
+elasticsearch_config: /etc/elasticsearch/elasticsearch.yml
+
+# logstash
+logstash_ssl_directory: /etc/logstash/certs
+logstash_config: /etc/logstash/logstash.yml
+
+# kibana
+kibana_ssl_directory: /etc/kibana/certs
+kibana_config: /etc/kibana/kibana.yml

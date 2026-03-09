@@ -1,0 +1,22 @@
+---
+- name: Adding Logstash pipeline file
+  template:
+    src: templates/logstash-pipeline.conf.j2
+    dest: "/etc/logstash/conf.d/example-pipeline.conf"
+    owner: logstash
+    group: logstash
+    mode: '0644'
+  run_once: true
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['logstash'] }}"
+  loop_control:
+    index_var: count
+
+- name: Restart Logstash
+  systemd_service:
+    name: logstash
+    state: restarted
+    enabled: true
+  run_once: true
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['logstash'] }}"
