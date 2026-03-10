@@ -1,5 +1,5 @@
 ---
-- name: install Java
+- name: Install Java
   apt:
     name: openjdk-11-jdk
     state: present
@@ -10,21 +10,23 @@
       get_url:
         url: "https://downloads.apache.org/spark/spark-{{ spark_version }}/spark-{{ spark_version }}-bin-hadoop3.tgz"
         dest: "/tmp/spark-{{ spark_version }}-bin-hadoop3.tgz"
+        mode: '0644'
   rescue:
     - name: Download Spark from archive repository
       get_url:
         url: "https://archive.apache.org/dist/spark/spark-{{ spark_version }}/spark-{{ spark_version }}-bin-hadoop3.tgz"
         dest: "/tmp/spark-{{ spark_version }}-bin-hadoop3.tgz"
+        mode: '0644'
 
-- name: extract spark
+- name: Extract spark
   unarchive:
     src: "/tmp/spark-{{ spark_version }}-bin-hadoop3.tgz"
     dest: "{{ spark_home }}"
     owner: spark
     group: spark
-    remote_src: yes
+    remote_src: true
 
-- name: move spark download to spark home directory
+- name: Move spark download to spark home directory
   shell:
     cmd: mv /opt/spark/spark-{{ spark_version }}-bin-hadoop3/* /opt/spark
 
@@ -33,12 +35,12 @@
     path: "/tmp/spark-{{ spark_version }}-bin-hadoop3.tgz"
     state: absent
 
-- name: remove /opt/spark/spark-{{ spark_version }}-bin-hadoop3
+- name: Remove /opt/spark/spark-{spark_version}-bin-hadoop3
   file:
     path: "/opt/spark/spark-{{ spark_version }}-bin-hadoop3.tgz"
     state: absent
 
-- name: create spark configuration directory
+- name: Create spark configuration directory
   file:
     path: "{{ spark_home }}/conf"
     state: directory
@@ -49,9 +51,9 @@
     path: "{{ spark_home }}"
     owner: spark
     group: spark
-    recurse: yes
+    recurse: true
 
-- name: configure spark-env.sh on master
+- name: Configure spark-env.sh on master
   template:
     src: templates/spark-env-master.sh.j2
     dest: "/opt/spark/conf/spark-env.sh"
@@ -59,7 +61,7 @@
   delegate_to: localhost
   run_once: true
 
-- name: configure spark-env.sh on workers
+- name: Configure spark-env.sh on workers
   template:
     src: templates/spark-env-worker.sh.j2
     dest: "/opt/spark/conf/spark-env.sh"
@@ -67,7 +69,7 @@
   delegate_to: "{{ item }}"
   loop: "{{ groups['spark_workers'] }}"
 
-- name: configure spark-defaults.conf on master
+- name: Configure spark-defaults.conf on master
   template:
     src: templates/spark-defaults-master.conf.j2
     dest: "/opt/spark/conf/spark-defaults.conf"
@@ -75,7 +77,7 @@
   delegate_to: localhost
   run_once: true
 
-- name: configure spark-defaults.conf on workers
+- name: Configure spark-defaults.conf on workers
   template:
     src: templates/spark-defaults-worker.conf.j2
     dest: "/opt/spark/conf/spark-defaults.conf"
@@ -83,15 +85,15 @@
   delegate_to: "{{ item }}"
   loop: "{{ groups['spark_workers'] }}"
 
-- name: populate spark workers file
+- name: Populate spark workers file
   template:
     src: templates/workers.j2
     dest: "/opt/spark/conf/workers"
     mode: '0644'
 
-- name: move spark-master systemd service file
+- name: Move spark-master systemd service file
   ansible.builtin.copy:
-    src: files/spark-master.service 
+    src: files/spark-master.service
     dest: /etc/systemd/system/spark-master.service
     owner: spark
     group: spark
@@ -99,14 +101,14 @@
   delegate_to: localhost
   run_once: true
 
-- name: enable spark master
+- name: Enable spark master
   systemd:
     name: spark-master
-    enabled: yes
+    enabled: true
   delegate_to: localhost
   run_once: true
 
-- name: move spark-workers systemd service file
+- name: Move spark-workers systemd service file
   template:
     src: templates/spark-workers.service.j2
     dest: "/etc/systemd/system/spark-workers.service"
@@ -116,35 +118,36 @@
   delegate_to: localhost
   run_once: true
 
-- name: enable spark workers
+- name: Enable spark workers
   systemd:
     name: spark-workers
-    enabled: yes
+    enabled: true
   delegate_to: localhost
   run_once: true
 
-- name: install scala
+- name: Install scala
   apt:
     name: scala
     state: present
-    update_cache: yes
+    update_cache: true
 
-- name: add spark environment variables to .bashrc
+- name: Add spark environment variables to .bashrc
   lineinfile:
     path: "{{ ansible_env.HOME }}/.bashrc"
-    create: yes
+    create: true
     line: "{{ item }}"
     state: present
+    mode: '0644'
   with_items:
     - 'export SPARK_HOME=/opt/spark'
     - 'export PATH=$PATH:$SPARK_HOME/bin:$SPARK_HOME/sbin'
 
-- name: source .bashrc
+- name: Source .bashrc
   shell: source ~/.bashrc
   args:
     executable: /bin/bash
 
-- name: create spark-events directory
+- name: Create spark-events directory
   file:
     path: /var/log/spark-events
     state: directory

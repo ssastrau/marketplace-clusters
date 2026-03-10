@@ -120,13 +120,11 @@ function configure_privateip {
 }
 
 function rename_provisioner {
-	INSTANCE_PREFIX=$(curl -sH "Authorization: Bearer ${TOKEN_PASSWORD}" "https://api.linode.com/v4/linode/instances/${LINODE_ID}" | jq -r .label)
-	export INSTANCE_PREFIX="${INSTANCE_PREFIX}"
 	echo "[info] renaming the provisioner"
 	curl -s -H "Content-Type: application/json" \
 		-H "Authorization: Bearer ${TOKEN_PASSWORD}" \
 		-X PUT -d "{
-        \"label\": \"${INSTANCE_PREFIX}1-${UUID}\"
+        \"label\": \"apache-spark-instance-1-${UUID}\"
       }" \
 		https://api.linode.com/v4/linode/instances/${LINODE_ID}
 }
@@ -161,7 +159,6 @@ function provisioner_vars {
 	sed 's/  //g' <<EOF >${group_vars}
   # provisioner vars
   provisioner_ssh_pubkey: "${PROVISIONER_SSH_PUB_KEY}"
-  provisioner_prefix: ${INSTANCE_PREFIX}
   type: ${LINODE_PARAMS[0]}
   region: ${LINODE_PARAMS[1]}
   image: ${LINODE_PARAMS[2]}
