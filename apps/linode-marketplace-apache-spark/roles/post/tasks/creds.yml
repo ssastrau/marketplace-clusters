@@ -1,17 +1,17 @@
 ---
 # roles/post/tasks/creds.yml
-- name: writing deployment credentials locally
+- name: Writing deployment credentials locally
   blockinfile:
     path: "/home/{{ sudo_username }}/.credentials"
-    create: yes
+    create: true
     owner: "{{ sudo_username }}"
     group: "{{ sudo_username }}"
-    mode: 0644
+    mode: '0644'
     block: |
       # system user
       sudo username: {{ sudo_username }}
       sudo password: {{ sudo_username_pass }}
-      
+
       # spark user
       spark user: {{ spark_user }}
       spark ui password: {{ spark_ui_password }}

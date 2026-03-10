@@ -1,8 +1,8 @@
 ---
-- name: generate ssh key for spark user
+- name: Generate ssh key for spark user
   user:
     name: spark
-    generate_ssh_key: yes
+    generate_ssh_key: true
     ssh_key_bits: 4096
     ssh_key_file: .ssh/id_rsa
 
