@@ -1,5 +1,5 @@
 ---
-- name: update /etc/hosts
+- name: Update /etc/hosts
   blockinfile:
     path: /etc/hosts
     marker: "# {mark} SPARK HOSTS"
@@ -16,11 +16,10 @@
   delegate_to: localhost
   run_once: true
 
-- name: configure hostnames on workers
+- name: Configure hostnames on workers
   hostname:
     use: systemd
     name: "{{ spark_data.server[count + 1].instance.hostname }}"
-  run_once: true
   delegate_to: "{{ item }}"
   loop: "{{ groups['spark_workers'] }}"
   loop_control:

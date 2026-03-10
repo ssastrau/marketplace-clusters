@@ -1,30 +1,30 @@
 ---
 # roles/post/tasks/sshkeys.yml
-- name: get root password
+- name: Get root password
   slurp:
     src: /etc/shadow
   run_once: true
   delegate_to: localhost
   register: shadow
 
-- name: set root password
+- name: Set root password
   set_fact:
     root_password: "{{ shadow['content'] | b64decode | regex_search('^root.+') }}"
   run_once: true
   delegate_to: localhost
-  
-- name: set root password on remote nodes
+
+- name: Set root password on remote nodes
   lineinfile:
     path: /etc/shadow
     regexp: '^root.+'
     line: '{{ root_password }}'
 
-- name: checking account keys
+- name: Checking account keys
   stat:
-    path: '{{ local_home}}/.ssh/authorized_keys'
+    path: '{{ local_home }}/.ssh/authorized_keys'
   register: authorized_keys_file
 
-- name: adding account keys to sudo user
+- name: Adding account keys to sudo user
   ansible.posix.authorized_key:
     user: "{{ item.user }}"
     key: "{{ lookup('file', local_home + '/.ssh/authorized_keys') }}"
@@ -36,13 +36,13 @@
     - authorized_keys_file.stat.exists
     - authorized_keys_file.stat.size > 0
 
-- name: remove ansible from authorized_keys
+- name: Remove ansible from authorized_keys
   lineinfile:
     dest: /root/.ssh/authorized_keys
     state: absent
     regexp: '^.+ansible$'
 
-- name: remove ansible ssh keys
+- name: Remove ansible ssh keys
   file:
     path: '{{ item }}'
     state: absent

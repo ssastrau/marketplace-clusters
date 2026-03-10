@@ -1,27 +1,27 @@
 ---
 # Create spark system user and group
-- name: check if spark group exists
+- name: Check if spark group exists
   getent:
     database: group
     key: spark
   ignore_errors: true
   register: groupcheck
 
-- name: create spark group
+- name: Create spark group
   group:
     name: spark
     state: present
     system: true
   when: groupcheck is failed
 
-- name: check if spark user exists
+- name: Check if spark user exists
   getent:
     database: passwd
     key: spark
   ignore_errors: true
   register: usercheck
 
-- name: create spark user
+- name: Create spark user
   user:
     name: spark
     group: spark
@@ -33,7 +33,7 @@
     state: present
   when: usercheck is failed
 
-- name: set permissions on spark home directory
+- name: Set permissions on spark home directory
   file:
     path: "{{ spark_home }}"
     owner: spark

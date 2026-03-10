@@ -8,7 +8,7 @@
     - { search: '^\#?PermitRootLogin (yes|no)', replace: 'PermitRootLogin no' }
     - { search: '^\#?PasswordAuthentication (yes|no)', replace: 'PasswordAuthentication no' }
     - { search: '^\#?PubkeyAuthentication (yes|no)', replace: 'PubkeyAuthentication yes' }
-  notify: restart ssh
+  notify: Restart ssh
   when: 
     - disable_root is defined
     - authorized_keys_file.stat.exists
@@ -22,7 +22,7 @@
     line: "{{ item.replace }}"
   loop:
     - { search: '^\#?PermitRootLogin (yes|no)', replace: 'PermitRootLogin no' }
-  notify: restart ssh
+  notify: Restart ssh
   when: 
     - disable_root is defined
     - authorized_keys_file is not defined

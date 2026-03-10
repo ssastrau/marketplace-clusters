@@ -9,16 +9,18 @@
     path: /etc/nginx/.htpasswd
     name: "{{ spark_user }}"
     password: "{{ spark_ui_password }}"
+    mode: '0644'
 
 - name: Remove default NGINX site
   file:
     path: /etc/nginx/sites-enabled/default
     state: absent
-  
+
 - name: Configure NGINX for Spark Master
   template:
     src: templates/nginx-master.conf.j2
     dest: /etc/nginx/sites-available/{{ _domain }}
+    mode: '0644'
 
 - name: Enable NGINX configuration on master
   file:
