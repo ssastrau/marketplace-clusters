@@ -1,8 +1,9 @@
 ---
 # motd and creds gen
-- name: copy MOTD template to /etc/motd
+- name: Copy MOTD template to /etc/motd
   template:
     src: templates/motd.j2
     dest: /etc/motd
+    mode: '0644'
   delegate_to: localhost
   run_once: true
