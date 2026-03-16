@@ -4,13 +4,23 @@ set -e
 
 SSH_TIMEOUT=600
 DEPLOYMENT_SCRIPT="${APP_NAME#linode-marketplace-}-deploy.sh"
+SSH_KEY="$HOME/.ssh/id_linode"
+
+mkdir -p ~/.ssh
+echo "$LINODE_PRIVATE_SSH_KEY" > "$SSH_KEY"
+chmod 600 "$SSH_KEY"
 
 wait_for_ssh() {
   local timeout="${1:-$SSH_TIMEOUT}"
   local elapsed=0
 
   while true; do
-    if sshpass -p "$LINODE_ROOT_PASS" ssh -o StrictHostKeyChecking=accept-new root@"$LINODE_IPV4" "exit"; then
+    if ssh \
+      -i "$SSH_KEY" \
+      -o StrictHostKeyChecking=accept-new \
+      -o PasswordAuthentication=no \
+      -o BatchMode=yes \
+      root@"$LINODE_IPV4" "exit"; then
       echo "Connected to Linode via SSH"
       break
     fi
@@ -26,7 +36,8 @@ wait_for_ssh() {
 
 debian_deploy() {
   set +e
-  sshpass -p "$LINODE_ROOT_PASS" ssh \
+  ssh \
+  -i "$SSH_KEY" \
   -o StrictHostKeyChecking=no \
   -o ServerAliveInterval=30 \
   -o ServerAliveCountMax=10 \
@@ -66,7 +77,8 @@ debian_deploy() {
 }
 
 rhel_deploy() {
-  sshpass -p "$LINODE_ROOT_PASS" ssh \
+  ssh \
+  -i "$SSH_KEY" \
   -o StrictHostKeyChecking=no \
   -o ServerAliveInterval=30 \
   -o ServerAliveCountMax=10 \
@@ -119,4 +131,3 @@ run_remote_deploy() {
 wait_for_ssh
 run_remote_deploy
 wait_for_ssh
-
