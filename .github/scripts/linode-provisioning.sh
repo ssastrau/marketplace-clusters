@@ -16,6 +16,7 @@ RESPONSE=$(curl -s -o response.json -w "%{http_code}" \
                 \"type\": \"${LINODE_TYPE}\",
                 \"label\": \"github-${APP_NAME}\",
                 \"root_pass\": \"$LINODE_ROOT_PASS\",
+                \"authorized_keys\": [\"${LINODE_PUBLIC_SSH_KEY}\"],
                 \"disk_encryption\": \"enabled\"
             }" https://api.linode.com/v4/linode/instances)
 
