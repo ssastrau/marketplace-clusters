@@ -1,5 +1,5 @@
 ---
-- name: install glusterfs
+- name: Install glusterfs
   apt:
     name: glusterfs-server
     state: present

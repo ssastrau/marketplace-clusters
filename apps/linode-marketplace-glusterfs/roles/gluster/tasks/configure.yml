@@ -1,37 +1,36 @@
 ---
 # set facts for reference
-
-- name: setting facts
+- name: Setting facts
   set_fact:
     gluster1: "{{ gluster_data.server[0].instance.hostname }}"
     gluster2: "{{ gluster_data.server[1].instance.hostname }}"
     gluster3: "{{ gluster_data.server[2].instance.hostname }}"
 
-- name: glusterd start
+- name: Glusterd start
   systemd:
     name: glusterd
     state: started
-    enabled: yes
+    enabled: true
 
-- name: ensure glusterd is in running state
+- name: Ensure glusterd is in running state
   systemd:
-    name: glusterd 
+    name: glusterd
     state: started
   register: result
   until: result.status.ActiveState == "active"
   retries: 10
   delay: 5
 
-- name: create trusted storage pool
+- name: Create trusted storage pool
   gluster.gluster.gluster_peer:
     state: present
     nodes:
       - '{{ gluster_data.server[1].instance.hostname }}'
       - '{{ gluster_data.server[2].instance.hostname }}'
   run_once: true
-  delegate_to: "localhost"  
+  delegate_to: "localhost"
 
-- name: create gluster volumes with ssl
+- name: Create gluster volumes with ssl
   gluster.gluster.gluster_volume:
     state: present
     name: data-volume
@@ -40,7 +39,7 @@
     cluster:
       - '{{ gluster1 }}'
       - '{{ gluster2 }}'
-      - '{{ gluster3 }}'    
+      - '{{ gluster3 }}'
     options:
       { transport.address-family: inet,
         nfs.disable: 'on',
@@ -69,14 +68,14 @@
       }
     force: true
   run_once: true
-  delegate_to: "{{groups['gluster_servers'][0]}}"
+  delegate_to: "{{ groups['gluster_servers'][0] }}"
   retries: 3
   delay: 3
   register: result
   until: result is not failed
-  when: client_ips is defined  
+  when: client_ips is defined
 
-- name: create gluster volumes with ssl no clients
+- name: Create gluster volumes with ssl no clients
   gluster.gluster.gluster_volume:
     state: present
     name: data-volume
@@ -85,7 +84,7 @@
     cluster:
       - '{{ gluster1 }}'
       - '{{ gluster2 }}'
-      - '{{ gluster3 }}'    
+      - '{{ gluster3 }}'
     options:
       { transport.address-family: inet,
         nfs.disable: 'on',
@@ -111,23 +110,24 @@
       }
     force: true
   run_once: true
-  delegate_to: "{{groups['gluster_servers'][0]}}"
+  delegate_to: "{{ groups['gluster_servers'][0] }}"
   retries: 3
   delay: 3
   register: result
   until: result is not failed
   when: client_ips is not defined
 
-- name: enable management encryption
+- name: Enable management encryption
   file:
     path: /var/lib/glusterd/secure-access
     state: touch
-  notify: restart glusterd
+    mode: '0600'
+  notify: Restart glusterd
 
-- name: configure quorum ratio
+- name: Configure quorum ratio
   shell: gluster volume set all cluster.server-quorum-ratio 51%
   retries: 3
   delay: 1
   register: result
   until: result.rc == 0
-  notify: start gluster volume
+  notify: Start gluster volume

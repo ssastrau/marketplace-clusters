@@ -1,43 +1,43 @@
 ---
 # generate tls certificates for gluster and client nodes
-
-- name: set ssl directory
+- name: Set ssl directory
   set_fact:
     ssl_directory: "/usr/lib/ssl"
 
-- name: generate dhparams.pem with the default size (4096 bits)
+- name: Generate dhparams.pem with the default size (4096 bits)
   community.crypto.openssl_dhparam:
     path: "{{ ssl_directory }}/dhparams.pem"
   run_once: true
   delegate_to: "localhost"
 
-- name: copy dhparams.pem
+- name: Copy dhparams.pem
   slurp:
     src: "{{ ssl_directory }}/dhparams.pem"
   register: dhparampem
   delegate_to: "localhost"
 
-- name: move dhparam.pem to gluster nodes
+- name: Move dhparam.pem to gluster nodes
   copy:
     dest: "{{ ssl_directory }}/dhparams.pem"
     content: |
       {{ dhparampem['content'] | b64decode }}
+    mode: '0644'
   run_once: true
   delegate_to: "{{ item }}"
   loop: "{{ groups['gluster_servers'] }}"
 
-- name: generate private key for gluster
+- name: Generate private key for gluster
   community.crypto.openssl_privatekey:
-   path: "{{ ssl_directory }}/glusterfs.key"
+    path: "{{ ssl_directory }}/glusterfs.key"
 
-- name: generate private key for clients
+- name: Generate private key for clients
   community.crypto.openssl_privatekey:
-   path: "{{ ssl_directory }}/{{ item.instance.hostname }}.key"
+    path: "{{ ssl_directory }}/{{ item.instance.hostname }}.key"
   loop: "{{ gluster_data.client }}"
   delegate_to: "localhost"
   when: client_ips is defined
 
-- name: generate csr for gluster
+- name: Generate csr for gluster
   community.crypto.openssl_csr:
     path: "{{ ssl_directory }}/glusterfs.csr"
     privatekey_path: "{{ ssl_directory }}/glusterfs.key"
@@ -48,7 +48,7 @@
   loop_control:
     index_var: count
 
-- name: generate csr for clients
+- name: Generate csr for clients
   community.crypto.openssl_csr:
     path: "{{ ssl_directory }}/{{ item.instance.hostname }}.csr"
     privatekey_path: "{{ ssl_directory }}/{{ item.instance.hostname }}.key"
@@ -56,15 +56,15 @@
   loop: "{{ gluster_data.client }}"
   delegate_to: "localhost"
   when: client_ips is defined
- 
-- name: generate cert for gluster
+
+- name: Generate cert for gluster
   community.crypto.x509_certificate:
     path: "{{ ssl_directory }}/glusterfs.pem"
     privatekey_path: "{{ ssl_directory }}/glusterfs.key"
     csr_path: "{{ ssl_directory }}/glusterfs.csr"
     provider: selfsigned
- 
-- name: generate cert for clients
+
+- name: Generate cert for clients
   community.crypto.x509_certificate:
     path: "{{ ssl_directory }}/{{ item.instance.hostname }}.pem"
     privatekey_path: "{{ ssl_directory }}/{{ item.instance.hostname }}.key"
@@ -74,7 +74,7 @@
   delegate_to: "localhost"
   when: client_ips is defined
 
-- name: get gluster certs for ca
+- name: Get gluster certs for ca
   slurp:
     src: "{{ ssl_directory }}/glusterfs.pem"
   run_once: true
@@ -82,7 +82,7 @@
   loop: "{{ groups['gluster_servers'] }}"
   register: glustercerts
 
-- name: get client certs for ca
+- name: Get client certs for ca
   slurp:
     src: "{{ ssl_directory }}/{{ item.instance.hostname }}.pem"
   run_once: true
@@ -91,7 +91,7 @@
   register: clientcerts
   when: client_ips is defined
 
-- name: setting client cert facts
+- name: Setting client cert facts
   set_fact:
     "client{{ count + 1 }}_cert": "{{ item.content | b64decode }}"
   loop: "{{ clientcerts.results }}"
@@ -101,25 +101,27 @@
   delegate_to: localhost
   when: client_ips is defined
 
-- name: write gluster certs to ca
+- name: Write gluster certs to ca
   lineinfile:
     path: '{{ ssl_directory }}/glusterfs.ca'
     insertafter: EOF
-    create: yes
+    create: true
+    mode: '0644'
     line: |
       {{ item.content | b64decode }}
   loop: "{{ glustercerts.results }}"
   loop_control:
     index_var: count
-        
-- name: write client certs to ca
+
+- name: Write client certs to ca
   lineinfile:
     path: '{{ ssl_directory }}/glusterfs.ca'
     insertafter: EOF
-    create: yes
+    create: true
+    mode: '0644'
     line: |
       {{ item.content | b64decode }}
   loop: "{{ clientcerts.results }}"
   loop_control:
     index_var: count
-  when: client_ips is defined 
+  when: client_ips is defined

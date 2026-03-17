@@ -1,7 +1,8 @@
+---
 collections:
- - name: community.crypto
-   version: 2.26.0
- - name: linode.cloud
-   version: 0.16.1
- - name: gluster.gluster
-   version: 1.0.2
+  - name: community.crypto
+    version: 2.26.0
+  - name: linode.cloud
+    version: 0.16.1
+  - name: gluster.gluster
+    version: 1.0.2
