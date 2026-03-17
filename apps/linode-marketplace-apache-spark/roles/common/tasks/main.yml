@@ -1,12 +1,8 @@
 ---
-# roles/common/tasks
-- name: Apt update
-  apt:
-    update_cache: true
-
-- name: Apt upgrade
-  apt:
-    upgrade: full
+# apt_setup_update
+- name: Update system packages
+  import_role:
+    name: update_pkgs
 
 - name: Install basic packages
   apt:
@@ -25,32 +21,39 @@
       - apache2-utils
     state: present
 
-- name: Fail2ban jail
-  copy:
-    src: /etc/fail2ban/fail2ban.conf
-    dest: /etc/fail2ban/fail2ban.local
-    remote_src: true
-    mode: '0644'
-  notify: Start fail2ban
-
-# dns creation
-- name: Create dns A records
-  import_tasks: create_dns_record.yml
+# Set _domain variable
+- name: Set _domain variable
+  import_role:
+    name: setdomain
   run_once: true
   delegate_to: localhost
-  when: [token_password is defined]
 
-- name: Secure ssh configs
-  lineinfile:
-    path: /etc/ssh/sshd_config
-    regexp: "{{ item.search }}"
-    line: "{{ item.replace }}"
-  loop:
-    - { search: '^\#?PermitRootLogin (yes|no)', replace: 'PermitRootLogin without-password' }
-    - { search: '^\#?PasswordAuthentication (yes|no)', replace: 'PasswordAuthentication no' }
-    - { search: '^\#?PubkeyAuthentication (yes|no)', replace: 'PubkeyAuthentication yes' }
-  notify: Restart ssh
+# dns creation
+- name: Create dns A record
+  import_role:
+    name: create_dns_record
+  when:
+    - token_password is defined
+    - default_dns is not defined
+  run_once: true
+  delegate_to: localhost
+
+# disable root login w/wo pubkey
+- name: Secure ssh
+  import_role:
+    name: securessh
+  when: disable_root is defined
+
+# ufw_install
+- name: Enabling ufw
+  import_role:
+    name: ufw
 
 # ufw rules
 - name: Apply ufw rules
   import_tasks: ufw_rules.yml
+
+# fail2ban
+- name: Enabling fail2ban
+  import_role:
+    name: fail2ban_install

@@ -1,68 +1,40 @@
 ---
-# roles/common/tasks/create_dns_record.yml
-# set dns facts when domain is defined
-- name: Set dns fact for subdomain
-  set_fact:
-    _domain: '{{ subdomain }}.{{ domain }}'
-    cacheable: true
-  delegate_to: localhost
-  run_once: true
-  when: [domain is defined, subdomain != "www"]
-
-- name: Set dns fact for domain
-  set_fact:
-    _domain: '{{ domain }}'
-    cacheable: true
-  delegate_to: localhost
-  run_once: true
-  when:
-    - domain is defined
-    - subdomain == "www"
-
-# set dns facts when domain is not defined
-- name: Set dns fact for default rdns
-  set_fact:
-    _domain: "{{ ansible_default_ipv4.address | replace('.', '-') }}.ip.linodeusercontent.com"
-    cacheable: true
-  when: domain is not defined
-
+# apps/linode_helpers/roles/create_dns_record/tasks/main.yml
 # create dns records
-- name: Get host default IPv4 address
-  debug:
-    msg: '{{ ansible_default_ipv4.address }}'
-  register: ip_address
-  when: domain is defined
 
-- name: Print ip address
+- name: get host default IPv4 address
+  debug:
+    msg: "{{ ansible_default_ipv4.address }}"
+  register: ip_address
+
+- name: print ip address
   ansible.builtin.debug:
     var: ip_address
-  when: domain is defined
 
-- name: Check existence of domain zone
+# loop through domains the provided API token has grants to. Creating an A record without a zone, or creating a duplicate zone will fail the play.
+- name: check existence of domain zone
   block:
-    - name: Lookup domain info
+    - name: lookup domain info
       linode.cloud.domain_info:
         api_token: "{{ token_password }}"
         domain: "{{ domain }}"
       register: domain_output
-      when: domain is defined
 
-    - name: Print domain info
+    - name: print domain info
       ansible.builtin.debug:
         var: domain_output.zone_file.zone_file.0
-      when: domain is defined
 
-    - name: Check domain existence
+    - name: check domain existence
       ansible.builtin.debug:
         msg: "domain zone already exists"
-      when: [domain is defined, domain in domain_output.zone_file.zone_file.0]
+      when: domain in domain_output.zone_file.zone_file.0
+
   rescue:
-    - name: Handle failure
+    - name: handle failure
       ansible.builtin.debug:
         msg: "domain zone does not exist"
-      when: domain is defined
 
-- name: Create a dns zone
+- name: create a dns zone
   linode.cloud.domain:
     api_token: "{{ token_password }}"
     domain: "{{ domain }}"
@@ -73,7 +45,7 @@
     - domain is defined
     - domain_output.zone_file.zone_file.0 is not defined
 
-- name: Create A record for domain
+- name: create A record for domain
   linode.cloud.domain_record:
     api_token: "{{ token_password }}"
     domain: "{{ domain }}"
@@ -82,9 +54,11 @@
     target: "{{ ansible_default_ipv4.address }}"
     ttl_sec: 30
     state: present
-  when: [domain is defined, subdomain == "www"]
+  when:
+    - domain is defined
+    - subdomain == "www"
 
-- name: Create A record for subdomain
+- name: create A record for subdomain
   linode.cloud.domain_record:
     api_token: "{{ token_password }}"
     domain: "{{ domain }}"
@@ -93,13 +67,13 @@
     target: "{{ ansible_default_ipv4.address }}"
     ttl_sec: 30
     state: present
-  when: [domain is defined, subdomain is defined]
+  when: subdomain is defined
 
-- name: Wait for DNS propogation
-  ansible.builtin.pause:
+- name: wait for DNS propogation
+  ansible.builtin.pause: 
     minutes: 3
-  when: domain is defined
 
+# it is recommended to use an external DNS resolver for domain validation
 - name: A record lookup for domain
   debug:
     msg: "{{ lookup('community.general.dig', domain, '@8.8.8.8') }}"
@@ -107,7 +81,9 @@
   until: ip_address.msg in dig_result.msg
   retries: 5
   delay: 10
-  when: [domain is defined, subdomain == "www"]
+  when:
+    - domain is defined
+    - subdomain == "www"
 
 - name: A record lookup for subdomain
   debug:
@@ -116,4 +92,4 @@
   until: ip_address.msg in dig_result.msg
   retries: 5
   delay: 10
-  when: [domain is defined, subdomain != "www"]
+  when: subdomain is defined
