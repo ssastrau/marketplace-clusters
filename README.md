@@ -24,7 +24,7 @@ All Ansible playbooks should generally adhere to the [sample directory layout](h
 
 Helper functions are static roles that can be called at will when we are trying to accomplish a repeatable system task. Instead of rewriting the same function for multiple One-Click Apps, we can simply import the helper role to accomplish the same effect. This results in basic system configurations being performed predictably and reliably, without the variance of individual authors.
 
-More detailed information on the available helper functions and variables can be found in the [utils](apps/utils/README.md) root directory.
+More detailed information on the available helper functions and variables can be found in the [linode_helpers](apps/linode_helpers/README.md) root directory.
 
 For more information on roles please refer to the [Ansible documentation](https://docs.ansible.com/ansible/latest/user_guide/playbooks_reuse_roles.html#using-roles-at-the-play-level).
 

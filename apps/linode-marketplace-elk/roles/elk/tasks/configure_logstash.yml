@@ -1,0 +1,51 @@
+---
+- name: Backup Logstash config
+  copy:
+    src: "{{ logstash_config }}"
+    dest: "{{ logstash_config }}.bak"
+    remote_src: true
+    owner: logstash
+    group: logstash
+    mode: '0644'
+  run_once: true
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['logstash'] }}"
+
+- name: Update Logstash config (1/2)
+  lineinfile:
+    path: "{{ logstash_config }}"
+    regexp: "{{ item.1.search }}"
+    line: "{{ item.1.replace }}"
+  delegate_to: "{{ item.0 }}"
+  loop: "{{ groups['logstash'] | product(config_params) | list }}"
+  vars:
+    config_params:
+      - { search: '^# queue.type:', replace: 'queue.type: persisted' }
+      - { search: '^# path.queue:', replace: 'path.queue: /var/lib/logstash/queue' }
+
+- name: Update Logstash config (2/2)
+  lineinfile:
+    path: "{{ logstash_config }}"
+    regexp: "^# node.name:"
+    line: "node.name: {{ data.logstash[count].instance.hostname }}"
+  run_once: true
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['logstash'] }}"
+  loop_control:
+    index_var: count
+
+# Convert certificate to pem encoded
+
+- name: Convert private key to PKCS8 format
+  community.crypto.openssl_privatekey_convert:
+    src_path: "{{ logstash_ssl_directory }}/{{ data.logstash[count].instance.hostname }}.key"
+    dest_path: "{{ logstash_ssl_directory }}/{{ data.logstash[count].instance.hostname }}.pkcs8.key"
+    format: pkcs8
+    owner: logstash
+    group: logstash
+    mode: '0600'
+  run_once: true
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['logstash'] }}"
+  loop_control:
+    index_var: count

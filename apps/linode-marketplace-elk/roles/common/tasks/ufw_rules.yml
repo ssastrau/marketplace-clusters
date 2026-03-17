@@ -1,0 +1,64 @@
+---
+# vars
+- name: Create cluster IP list
+  set_fact:
+    logstash_ips: "{{ data.logstash | map(attribute='instance.ip_priv1') | list }}"
+    elasticsearch_ips: "{{ data.elasticsearch | map(attribute='instance.ip_priv1') | list }}"
+    kibana_ips: "{{ data.kibana | map(attribute='instance.ip_priv1') | list }}"
+    cacheable: true
+  run_once: true
+  delegate_to: localhost
+
+- name: Set Elasticsearch allow host list
+  set_fact:
+    elasticsearch_allow: "{{ elasticsearch_ips + logstash_ips + kibana_ips }}"
+  run_once: true
+  delegate_to: localhost
+- name: Allow SSH access
+  ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  loop: ["22"]
+- name: Allow Kibana web access (public)
+  ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  run_once: true
+  delegate_to: localhost
+  loop: ["80", "443"]
+
+# Elasticsearch
+- name: Configure UFW for elasticsearch
+  ufw:
+    rule: allow
+    port: "{{ item.1 }}"
+    proto: tcp
+    src: "{{ item.2 }}"
+  run_once: true
+  delegate_to: "{{ item.0 }}"
+  loop: "{{ groups['elasticsearch'] | product(elasticsearch_ports, elasticsearch_allow) | list }}"
+  loop_control:
+    index_var: count
+  vars:
+    elasticsearch_ports: ["9200", "9300"]
+- name: Configure UFW for Logstash
+  ufw:
+    rule: allow
+    port: "5044"
+    proto: tcp
+    src: "{{ beats_allow }}"
+  run_once: true
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['logstash'] }}"
+  when: beats_allow is defined
+
+- name: Enable UFW
+  ufw:
+    state: enabled
+
+- name: UFW deny incoming
+  ufw:
+    direction: incoming
+    policy: deny
