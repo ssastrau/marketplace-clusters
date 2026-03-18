@@ -1,0 +1,53 @@
+---
+# Add repo
+- name: Add Elastic repo
+  import_tasks: repo.yml
+
+# Install ELK
+
+- name: Install Logstash, Elasticsearch and Kibana
+  import_tasks: install_elk.yml
+
+- name: Generate SSL certificates
+  import_tasks: ssl.yml
+
+- name: Copy SSL certificates to cluster
+  import_tasks: copycerts.yml
+
+- name: Configure Elasticsearch
+  import_tasks: configure_elasticsearch.yml
+
+- name: Reset user passwords in Elasticsearch
+  import_tasks: password_reset.yml
+  no_log: true
+
+- name: Create Logstash user
+  import_tasks: logstash_user.yml
+  when:
+    - logstash_ingest_username is defined
+    - elasticsearch_index_name is defined
+
+- name: Create Index Lifecycle Management policy
+  import_tasks: ilm_policy.yml
+  when:
+    - logstash_ingest_username is defined
+    - elasticsearch_index_name is defined
+
+# Kibana
+
+- name: Configure Kibana
+  import_tasks: configure_kibana.yml
+
+- name: Configure Nginx as reverse proxy
+  import_tasks: nginx.yml
+
+# Logstash
+
+- name: Configure Logstash
+  import_tasks: configure_logstash.yml
+
+- name: Create Logstash pipeline
+  import_tasks: logstash_pipeline.yml
+  when:
+    - logstash_ingest_username is defined
+    - elasticsearch_index_name is defined

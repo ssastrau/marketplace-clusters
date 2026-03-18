@@ -1,0 +1,49 @@
+---
+- name: Set Elasticsearch URL
+  set_fact:
+    elasticsearch_endpoint: "https://{{ data.elasticsearch[0].instance.hostname }}:9200"
+    cacheable: true
+  run_once: true
+  delegate_to: localhost
+
+- name: Create Logstash writer role
+  uri:
+    url: "{{ elasticsearch_endpoint }}/_security/role/logstash_writer"
+    user: elastic
+    password: "{{ elasticsearch_password }}"
+    method: POST
+    body_format: json
+    status_code: [200]
+    return_content: true
+    ca_path: "{{ elasticsearch_ssl_directory }}/ca.crt"
+    client_cert: "{{ elasticsearch_ssl_directory }}/{{ data.elasticsearch[0].instance.hostname }}.crt"
+    client_key: "{{ elasticsearch_ssl_directory }}/{{ data.elasticsearch[0].instance.hostname }}.key"
+    body:
+      cluster: ["manage_index_templates", "monitor"]
+      indices:
+        - { names: ["{{ elasticsearch_index_name }}"], privileges: ["create", "write", "delete", "create_index"] }
+    headers:
+      Content-Type: 'application/json'
+  run_once: true
+  delegate_to: "{{ groups['elasticsearch'][0] }}"
+
+- name: Create Logstash ingest user
+  uri:
+    url: "{{ elasticsearch_endpoint }}/_security/user/logstash_ingest"
+    user: elastic
+    password: "{{ elasticsearch_password }}"
+    method: POST
+    body_format: json
+    status_code: [200]
+    return_content: true
+    ca_path: "{{ elasticsearch_ssl_directory }}/ca.crt"
+    client_cert: "{{ elasticsearch_ssl_directory }}/{{ data.elasticsearch[0].instance.hostname }}.crt"
+    client_key: "{{ elasticsearch_ssl_directory }}/{{ data.elasticsearch[0].instance.hostname }}.key"
+    body:
+      password: "{{ logstash_ingest_password }}"
+      roles: ["logstash_writer"]
+      full_name: "Logstash Ingest User"
+    headers:
+      Content-Type: 'application/json'
+  run_once: true
+  delegate_to: "{{ groups['elasticsearch'][0] }}"
