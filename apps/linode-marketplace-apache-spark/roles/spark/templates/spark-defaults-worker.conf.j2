@@ -1,0 +1,5 @@
+spark.master spark://{{ spark_data.server[0].instance.ip_priv1 }}:7077
+spark.eventLog.enabled true
+spark.eventLog.dir file:////var/log/spark-events
+spark.history.fs.logDirectory file:////var/log/spark-events
+spark.worker.ui.port 8081

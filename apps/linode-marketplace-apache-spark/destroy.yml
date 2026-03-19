@@ -1,0 +1,17 @@
+---
+# destroy linodes
+- name: Destroying Linodes
+  hosts: localhost
+  connection: local
+  vars_files: [group_vars/spark/vars, group_vars/spark/secret_vars]
+
+  vars:
+    count: '{{ cluster_size - 1 }}'
+
+  tasks:
+    - name: Deleting linodes except provisioner
+      linode.cloud.instance:
+        label: 'apache-spark-instance-{{ item | int + 1 }}-{{ uuid }}'
+        api_token: '{{ token_password }}'
+        state: absent
+      with_sequence: count='{{ count }}'
