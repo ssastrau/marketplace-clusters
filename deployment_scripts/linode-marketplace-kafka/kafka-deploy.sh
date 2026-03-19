@@ -154,23 +154,23 @@ function provisioner_sshkey {
 }
 
 function provisioner_vars {
-  local LINODE_PARAMS=($(curl -sH "Authorization: Bearer ${TOKEN_PASSWORD}" "https://api.linode.com/v4/linode/instances/${LINODE_ID}" | jq -r .type,.region,.image,.disk_encryption))
+  local LINODE_PARAMS=($(curl -sH "Authorization: Bearer ${TOKEN_PASSWORD}" "https://api.linode.com/v4/linode/instances/${LINODE_ID}" | jq -r .type,.region,.image))
   local TAGS=$(curl -sH "Authorization: Bearer ${TOKEN_PASSWORD}" "https://api.linode.com/v4/linode/instances/${LINODE_ID}" | jq -r .tags)
 	sed 's/  //g' <<EOF >${group_vars}
   # user vars
-  token: ${TOKEN_PASSWORD}
+  token: "${TOKEN_PASSWORD}"
   uuid: ${UUID}
-  ssh_keys: ${PROVISIONER_SSH_PUB_KEY}
-  type: ${LINODE_PARAMS[1]}
-  region: ${LINODE_PARAMS[2]}
-  image: ${LINODE_PARAMS[3]}
+  ssh_keys: "${PROVISIONER_SSH_PUB_KEY}"
+  type: ${LINODE_PARAMS[0]}
+  region: ${LINODE_PARAMS[1]}
+  image: ${LINODE_PARAMS[2]}
   linode_tags: ${LINODE_TAGS}
-  root_pass: ${TEMP_ROOT_PASS}
+  root_pass: "${TEMP_ROOT_PASS}"
   kafka_version: ${KAFKA_VERSION}
   cluster_size: ${CLUSTER_SIZE}
   controller_count: 3
   client_count: ${CLIENT_COUNT}
-  add_ssh_keys: '${ADD_SSH_KEYS}'
+  add_ssh_keys: "${ADD_SSH_KEYS}"
 EOF
 }
 

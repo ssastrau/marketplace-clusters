@@ -1,11 +1,11 @@
 ---
 # main
 
-- name: adding sudo user
+- name: Adding sudo user
   import_tasks: sudouser.yml
 
-- name: add user ssh keys
+- name: Add user ssh keys
   import_tasks: sshkeys.yml
 
-- name: writing kafka creds into file
+- name: Writing kafka creds into file
   import_tasks: motd.yml

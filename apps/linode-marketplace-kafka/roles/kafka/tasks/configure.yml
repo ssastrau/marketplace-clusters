@@ -1,33 +1,32 @@
 ---
-# configure kafka 
-
-- name: create kafka data and log directory
+# configure kafka
+- name: Create kafka data and log directory
   file:
     path: "{{ kafka_log_directory }}"
     state: directory
-    mode: 0755
+    mode: '0755'
     owner: kafka
     group: kafka
 
-- name: backup server and broker properties
+- name: Backup server and broker properties
   copy:
     src: "{{ kafka_config_directory }}/config/kraft/{{ item.config }}"
     dest: "{{ kafka_config_directory }}/config/kraft/{{ item.config }}.bak"
     owner: kafka
     group: kafka
-    mode: 0644
+    mode: '0644'
   loop:
     - { config: 'server.properties' }
     - { config: 'broker.properties' }
 
 # for servers that are controller and broker roles
-- name: updating kafka config for controller and broker
+- name: Updating kafka config for controller and broker
   template:
     src: templates/server.properties.j2
     dest: "{{ kafka_config_directory }}/config/kraft/server.properties"
     owner: kafka
     group: kafka
-    mode: 0644
+    mode: '0644'
   run_once: true
   delegate_to: "{{ item }}"
   loop: "{{ groups['kafka'] }}"
@@ -36,13 +35,13 @@
   when: hostvars[groups['kafka'][count]].role == 'controller and broker'
 
 # for servers who are brokers only
-- name: updating kafka config for broker only
+- name: Updating kafka config for broker only
   template:
     src: templates/broker.properties.j2
     dest: "{{ kafka_config_directory }}/config/kraft/broker.properties"
     owner: kafka
     group: kafka
-    mode: 0644
+    mode: '0644'
   run_once: true
   delegate_to: "{{ item }}"
   loop: "{{ groups['kafka'] }}"
@@ -50,16 +49,20 @@
     index_var: count
   when: hostvars[groups['kafka'][count]].role == 'broker only'
 
-- name: create kafka cluster uuid
+- name: Create kafka cluster uuid
   command:
-    cmd:  "{{ kafka_bin_directory }}/kafka-storage.sh random-uuid"
+    cmd: "{{ kafka_bin_directory }}/kafka-storage.sh random-uuid"
   register: cluster_uuid
   run_once: true
   delegate_to: "{{ groups['kafka'][0] }}"
 
-- name: format data directory for controller and broker nodes
+- name: Format data directory for controller and broker nodes
   command:
-    cmd: "{{ kafka_bin_directory }}/kafka-storage.sh format -t {{ cluster_uuid.stdout }} -c {{ kafka_config_directory }}/config/kraft/server.properties --ignore-formatted"
+    cmd: >-
+      {{ kafka_bin_directory }}/kafka-storage.sh format
+      -t {{ cluster_uuid.stdout }}
+      -c {{ kafka_config_directory }}/config/kraft/server.properties
+      --ignore-formatted
   become: true
   become_user: kafka
   run_once: true
@@ -69,9 +72,12 @@
     index_var: count
   when: hostvars[groups['kafka'][count]].role == 'controller and broker'
 
-- name: format data directory broker nodes
+- name: Format data directory broker nodes
   command:
-    cmd: "{{ kafka_bin_directory }}/kafka-storage.sh format -t {{ cluster_uuid.stdout }} -c {{ kafka_config_directory }}/config/kraft/broker.properties"
+    cmd: >-
+      {{ kafka_bin_directory }}/kafka-storage.sh format
+      -t {{ cluster_uuid.stdout }}
+      -c {{ kafka_config_directory }}/config/kraft/broker.properties
   become: true
   become_user: kafka
   run_once: true
@@ -81,7 +87,7 @@
     index_var: count
   when: hostvars[groups['kafka'][count]].role == 'broker only'
 
-- name: starting kafka
+- name: Starting kafka
   systemd:
     name: kafka
     state: started
