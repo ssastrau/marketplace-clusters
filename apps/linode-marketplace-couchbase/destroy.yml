@@ -9,7 +9,7 @@
   tasks:
   - name: deleting linodes except provisioner
     linode.cloud.instance:
-      label: '{{ instance_prefix }}-{{ item | int + 1 }}-{{ uuid }}'
+      label: 'couchbase-instance-{{ item | int + 1 }}-{{ uuid }}'
       api_token: '{{ api_token }}'
       state: absent
     with_sequence: count='{{ server_count }}'

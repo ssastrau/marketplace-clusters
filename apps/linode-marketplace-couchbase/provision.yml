@@ -49,7 +49,7 @@
   
   - name: create couchbase cluster
     linode.cloud.instance: 
-      label: '{{ instance_prefix }}-{{ item | int +1 }}-{{ uuid }}'
+      label: 'couchbase-instance-{{ item | int +1 }}-{{ uuid }}'
       api_token: '{{ api_token }}'
       type: '{{ type }}'
       region: '{{ region }}'
@@ -67,7 +67,7 @@
   - name: collect cluster details
     linode.cloud.instance_info:
       api_token: '{{ api_token }}'
-      label: '{{ instance_prefix }}-{{ item | int }}-{{ uuid }}'
+      label: 'couchbase-instance-{{ item | int }}-{{ uuid }}'
     register: cluster_info
     with_sequence: count='{{ server_count }}'
 
