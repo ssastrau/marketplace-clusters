@@ -1,0 +1,23 @@
+---
+# roles/post/tasks/creds.yml
+
+- name: writing deployment credentials locally
+  blockinfile:
+    path: "/home/{{ sudo_username }}/.credentials"
+    create: yes
+    owner: "{{ sudo_username }}"
+    group: "{{ sudo_username }}"
+    mode: 0644    
+    block: |
+      # System User 
+      Sudo User: {{ sudo_username }}
+      Password: {{ sudo_password }}
+      # Couchbase Server User: Administrator
+      Couchbase Server Administrator Password: {{ couchbase_admin_password }}
+      # Couchbase CA Password
+      ca_password: {{ ca_password }}
+
+- name: write MOTD with Web UI Address
+  template:
+    src: templates/motd.j2
+    dest: /etc/motd

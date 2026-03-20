@@ -1,0 +1,15 @@
+---
+# destroy linodes
+- name: Destroying Linodes
+  hosts: localhost
+  connection: local
+  vars_files:
+      - group_vars/couchbase/vars
+
+  tasks:
+  - name: deleting linodes except provisioner
+    linode.cloud.instance:
+      label: '{{ instance_prefix }}-{{ item | int + 1 }}-{{ uuid }}'
+      api_token: '{{ api_token }}'
+      state: absent
+    with_sequence: count='{{ server_count }}'
