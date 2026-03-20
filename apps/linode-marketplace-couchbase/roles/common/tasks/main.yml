@@ -1,25 +1,25 @@
 ---
 # vm configs
-- name: disable THP
+- name: Disable THP
   copy: 
     src: 'files/disable-thp.service'
     dest: '/etc/systemd/system/disable-thp.service'
 
-- name: reload and enable 
+- name: Reload and enable
   systemd: 
     name: disable-thp.service
     state: started
     enabled: true
     daemon_reload: true
 
-- name: set swappiness
+- name: Set swappiness
   sysctl:
     name: vm.swappiness
     value: '1'
     state: present
     reload: true
  
-- name: configure hostname for cluster nodes
+- name: Configure hostname for cluster nodes
   hostname: 
     use: systemd 
     name: '{{ couchbase_data.server[count].instance.hostname }}'
@@ -29,7 +29,7 @@
   loop_control:
     index_var: count
 
-- name: update /etc/hosts on all of the nodes
+- name: Update /etc/hosts on all of the nodes
   blockinfile:
     path: /etc/hosts
     marker: "# {mark} couchbase servers"
@@ -40,15 +40,11 @@
       {{ couchbase_data.server[count].instance.ip_priv1 }} {{ couchbase_data.server[count].instance.hostname }}
       {%- endfor %}  
 
-- name: apt update
-  apt:
-    update_cache: true
+- name: Update system packages
+  import_role:
+    name: update_pkgs
 
-- name: apt upgrade
-  apt: 
-    upgrade: true
-
-- name: install basic packages
+- name: Install basic packages
   apt:
     pkg:
     - net-tools
@@ -59,17 +55,42 @@
     - ssl-cert
     - python3-passlib
     - ufw
+    state: present
 
-- name: secure ssh configs
-  lineinfile:
-    path: /etc/ssh/sshd_config
-    regexp: "{{ item.search }}"
-    line: "{{ item.replace }}"
-  loop:
-    - { search: '^\#?PermitRootLogin (yes|no)', replace: 'PermitRootLogin without-password' }
-    - { search: '^\#?PasswordAuthentication (yes|no)', replace: 'PasswordAuthentication no' }
-    - { search: '^\#?PubkeyAuthentication (yes|no)', replace: 'PubkeyAuthentication yes' }
-  notify: restart ssh
+# Set _domain variable
+- name: Set _domain variable
+  import_role:
+    name: setdomain
+  run_once: true
+  delegate_to: localhost
 
-- name: add couchbase ports to ufw
-  include_tasks: ufw.yml
+# dns creation
+- name: Create dns A record
+  import_role:
+    name: create_dns_record
+  when:
+    - token_password is defined
+    - default_dns is not defined
+  run_once: true
+  delegate_to: localhost
+
+# disable root login w/wo pubkey
+- name: Secure ssh
+  import_role:
+    name: securessh
+  when: disable_root is defined
+
+# ufw_install
+- name: Enabling ufw
+  import_role:
+    name: ufw
+
+# ufw rules
+- name: Apply ufw rules
+  import_tasks: ufw_rules.yml
+
+# fail2ban
+- name: Enabling fail2ban
+  import_role:
+    name: fail2ban_install
+
