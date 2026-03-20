@@ -1,12 +1,12 @@
 ---
-- name: install couchbase
+- name: Install couchbase
   include_tasks: couchbase_install.yml
 
-- name: configure couchbase 
+- name: Configure couchbase
   include_tasks: couchbase_init.yml
 
-- name: add couchbase servers
+- name: Add couchbase servers
   include_tasks: couchbase_add.yml
 
-- name: create couchbase certs
+- name: Create couchbase certs
   include_tasks: couchbase_ssl.yml

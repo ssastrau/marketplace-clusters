@@ -1,17 +1,17 @@
 ---
 # copied from apps/linode_helpers/roles/certbot_ssl/tasks/certbot_standalone.yml
-- name: install python3-certbot
+- name: Install python3-certbot
   apt:
     name: python3-certbot
     state: present
 
-- name: set certbot plugin
+- name: Set certbot plugin
   set_fact:
     certbot_plugin: standalone
-    cacheable: yes
-  
+    cacheable: true
+
 # dry run
-- name: run dry-run for domain
+- name: Run dry-run for domain
   shell:
     cmd: "certbot -n --standalone --agree-tos --dry-run certonly -d {{ _domain }} -m {{ email_address }}"
   register: dry_run
@@ -21,12 +21,12 @@
   ignore_errors: true
 
 # assert that we can get valid certs. Otherwise fail - can't achieve final state
-- name: validate certbot dry-run
+- name: Validate certbot dry-run
   assert:
     that: dry_run is not failed
     fail_msg: "[Error] Certbot dry-run domain. Please check /var/log/letsencrypt/letsencrypt.log"
     success_msg: "[Info] Certbot dry-run successful!"
 
-- name: installing let's encrypt certificate on provisioner
+- name: Installing let's encrypt certificate on provisioner
   shell:
     cmd: "certbot -n --standalone --agree-tos certonly -d {{ _domain }} -m {{ email_address }}"

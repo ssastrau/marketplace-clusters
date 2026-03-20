@@ -1,17 +1,11 @@
 ---
 # couchbase cluster
-
-- name: configure couchbase cluster
+- name: Configure couchbase cluster
   hosts: all
   any_errors_fatal: true
   user: root
-  vars: 
+  vars:
     local_home: "{{ lookup('env','HOME') }}"
-  vars_files: 
-    - group_vars/couchbase/vars
+  vars_files: [group_vars/couchbase/vars]
   gather_facts: true
-
-  roles:
-    - common
-    - couchbase
-    - post
+  roles: [common, couchbase, post]

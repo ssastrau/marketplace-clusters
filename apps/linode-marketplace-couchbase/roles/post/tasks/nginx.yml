@@ -2,42 +2,44 @@
 # nginx reverse proxy - ACME SSL - redirct from 8091
 # user / group for web files?
 # can the import_tasks in main be delegated to provisioner?
-- name: install nginx
-  apt: 
+- name: Install nginx
+  apt:
     name: nginx
     state: present
 
-- name: update default config file
+- name: Update default config file
   template:
     src: "templates/vhost_default.conf.j2"
     dest: "/etc/nginx/sites-available/{{ _domain }}"
+    mode: "0644"
 
-- name: stop nginx to run certbot standalone
+- name: Stop nginx to run certbot standalone
   systemd:
     name: nginx
     state: stopped
 
-- name: run certbot standalone
+- name: Run certbot standalone
   import_tasks: certbot.yml
 
-- name: vhost file
+- name: Vhost file
   template:
     src: "templates/vhost_ssl.conf.j2"
     dest: "/etc/nginx/sites-available/{{ _domain }}"
+    mode: "0644"
 
-- name: create a symbolic link for the nginx configuration
+- name: Create a symbolic link for the nginx configuration
   file:
     src: "/etc/nginx/sites-available/{{ _domain }}"
     dest: "/etc/nginx/sites-enabled/{{ _domain }}"
     state: link
 
-- name: unlink the default nginx configuration
+- name: Unlink the default nginx configuration
   file:
     path: "/etc/nginx/sites-enabled/default"
-    state: absent 
+    state: absent
 
-- name: restart nginx
-  systemd: 
+- name: Restart nginx
+  systemd:
     name: nginx
     state: started
     enabled: true

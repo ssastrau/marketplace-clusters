@@ -1,12 +1,13 @@
 ---
 # vm configs
 - name: Disable THP
-  copy: 
+  copy:
     src: 'files/disable-thp.service'
     dest: '/etc/systemd/system/disable-thp.service'
+    mode: '0644'
 
 - name: Reload and enable
-  systemd: 
+  systemd:
     name: disable-thp.service
     state: started
     enabled: true
@@ -18,10 +19,10 @@
     value: '1'
     state: present
     reload: true
- 
+
 - name: Configure hostname for cluster nodes
-  hostname: 
-    use: systemd 
+  hostname:
+    use: systemd
     name: '{{ couchbase_data.server[count].instance.hostname }}'
   run_once: true
   delegate_to: '{{ item }}'
@@ -38,7 +39,7 @@
       # couchbase
       {%- for count in range(server_count | int) %}
       {{ couchbase_data.server[count].instance.ip_priv1 }} {{ couchbase_data.server[count].instance.hostname }}
-      {%- endfor %}  
+      {%- endfor %}
 
 - name: Update system packages
   import_role:
@@ -47,14 +48,14 @@
 - name: Install basic packages
   apt:
     pkg:
-    - net-tools
-    - htop
-    - rsync
-    - software-properties-common
-    - gnupg2
-    - ssl-cert
-    - python3-passlib
-    - ufw
+      - net-tools
+      - htop
+      - rsync
+      - software-properties-common
+      - gnupg2
+      - ssl-cert
+      - python3-passlib
+      - ufw
     state: present
 
 # Set _domain variable
@@ -68,9 +69,7 @@
 - name: Create dns A record
   import_role:
     name: create_dns_record
-  when:
-    - token_password is defined
-    - default_dns is not defined
+  when: [token_password is defined, default_dns is not defined]
   run_once: true
   delegate_to: localhost
 
@@ -93,4 +92,3 @@
 - name: Enabling fail2ban
   import_role:
     name: fail2ban_install
-

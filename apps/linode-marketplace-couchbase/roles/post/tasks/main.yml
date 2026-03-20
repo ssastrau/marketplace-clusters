@@ -1,20 +1,20 @@
 ---
 # roles/post/tasks/main.yml
-- name: add nginx reverse proxy for webui
+- name: Add nginx reverse proxy for webui
   import_tasks: nginx.yml
   delegate_to: localhost
   run_once: true
 
-- name: adding sudo user
+- name: Adding sudo user
   include_tasks: sudouser.yml
 
-- name: dumping credentials locally
+- name: Dumping credentials locally
   import_tasks: creds.yml
   delegate_to: localhost
   run_once: true
 
-- name: add user ssh keys
+- name: Add user ssh keys
   include_tasks: sshkeys.yml
 
-- name: graceful exit
+- name: Graceful exit
   meta: end_play
