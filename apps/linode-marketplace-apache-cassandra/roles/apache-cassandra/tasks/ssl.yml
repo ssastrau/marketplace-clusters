@@ -1,10 +1,10 @@
 ---
 # create cluster ssl directories
-- name: create cassandra ssl directory
+- name: Create cassandra ssl directory
   file:
-    path: "{{ item }}"
+    path: '{{ item }}'
     state: directory
-    mode: 0755
+    mode: '0755'
     owner: cassandra
     group: cassandra
   loop:
@@ -17,7 +17,7 @@
     - '{{ cassandra_ssl_truststore_directory }}'
 
 # create root ca for signing
-- name: generate ca key
+- name: Generate ca key
   community.crypto.openssl_privatekey:
     path: '{{ cassandra_ssl_ca_directory }}/ca.key'
     passphrase: '{{ ca_password }}'
@@ -30,7 +30,7 @@
   run_once: true
   delegate_to: localhost
 
-- name: generate ca csr
+- name: Generate ca csr
   community.crypto.openssl_csr:
     path: '{{ cassandra_ssl_ca_directory }}/ca.csr'
     privatekey_path: '{{ cassandra_ssl_ca_directory }}/ca.key'
@@ -44,7 +44,7 @@
     use_common_name_for_san: false
     basic_constraints:
       - 'CA:TRUE'
-    basic_constraints_critical: yes
+    basic_constraints_critical: true
     key_usage:
       - keyCertSign
     key_usage_critical: true
@@ -54,7 +54,7 @@
   run_once: true
   delegate_to: localhost
 
-- name: generate ca crt
+- name: Generate ca crt
   community.crypto.x509_certificate:
     path: '{{ cassandra_ssl_ca_directory }}/ca.crt'
     privatekey_path: '{{ cassandra_ssl_ca_directory }}/ca.key'
@@ -64,19 +64,19 @@
     provider: selfsigned
     owner: cassandra
     group: cassandra
-    mode: 0640
+    mode: '0640'
     return_content: true
   register: ca_crt
   run_once: true
   delegate_to: localhost
 
 # generate ssl keys
-- name: generate server key
+- name: Generate server key
   community.crypto.openssl_privatekey:
     path: '{{ cassandra_ssl_key_directory }}/{{ cassandra_data.server[count].instance.hostname }}.key'
     owner: cassandra
     group: cassandra
-    mode: 0600
+    mode: '0600'
     return_content: true
   run_once: true
   delegate_to: "{{ item }}"
@@ -84,18 +84,18 @@
   loop_control:
     index_var: count
 
-- name: generate client key
+- name: Generate client key
   community.crypto.openssl_privatekey:
     path: '{{ cassandra_ssl_key_directory }}/client{{ item }}.key'
     owner: cassandra
     group: cassandra
-    mode: 0600
+    mode: '0600'
   with_sequence: count="{{ client_count }}"
   run_once: true
   delegate_to: localhost
 
 # generate csrs
-- name: generate server csr
+- name: Generate server csr
   community.crypto.openssl_csr:
     path: '{{ cassandra_ssl_req_directory }}/{{ cassandra_data.server[count].instance.hostname }}.csr'
     privatekey_path: '{{ cassandra_ssl_key_directory }}/{{ cassandra_data.server[count].instance.hostname }}.key'
@@ -114,7 +114,7 @@
   loop_control:
     index_var: count
 
-- name: generate client csr
+- name: Generate client csr
   community.crypto.openssl_csr:
     path: '{{ cassandra_ssl_req_directory }}/client{{ item }}.csr'
     privatekey_path: '{{ cassandra_ssl_key_directory }}/client{{ item }}.key'
@@ -126,13 +126,13 @@
     common_name: 'client{{ item }}'
     use_common_name_for_san: false
     owner: cassandra
-    group: cassandra    
+    group: cassandra
   with_sequence: count="{{ client_count }}"
   run_once: true
   delegate_to: localhost
 
 # sign cert with ca and get client cert
-- name: generate server cert signed with ca cert
+- name: Generate server cert signed with ca cert
   community.crypto.x509_certificate:
     path: '{{ cassandra_ssl_cert_directory }}/{{ cassandra_data.server[count].instance.hostname }}.crt'
     privatekey_path: '{{ cassandra_ssl_key_directory }}/{{ cassandra_data.server[count].instance.hostname }}.key'
@@ -144,16 +144,16 @@
     provider: ownca
     owner: cassandra
     group: cassandra
-    mode: 0640
+    mode: '0640'
     return_content: true
   register: server_certs
   run_once: true
-  delegate_to: "{{ item }}"
+  delegate_to: '{{ item }}'
   loop: "{{ groups['cassandra_servers'] }}"
   loop_control:
     index_var: count
 
-- name: generate client cert signed with ca cert
+- name: Generate client cert signed with ca cert
   community.crypto.x509_certificate:
     path: '{{ cassandra_ssl_cert_directory }}/client{{ item }}.crt'
     privatekey_path: '{{ cassandra_ssl_key_directory }}/client{{ item }}.key'
@@ -165,7 +165,7 @@
     provider: ownca
     owner: cassandra
     group: cassandra
-    mode: 0640
+    mode: '0640'
     return_content: true
   register: client_certs
   with_sequence: count="{{ client_count }}"
@@ -173,7 +173,7 @@
   delegate_to: localhost
 
 # generate pkcs12 file from cert keypair
-- name: create server pcks12 file from
+- name: Create server pcks12 file from
   community.crypto.openssl_pkcs12:
     path: '{{ cassandra_ssl_keystore_directory }}/{{ cassandra_data.server[count].instance.hostname }}-keystore.jks'
     friendly_name: '{{ cassandra_data.server[count].instance.hostname }}'
@@ -183,14 +183,14 @@
     action: export
     state: present
     owner: cassandra
-    group: cassandra    
+    group: cassandra
   run_once: true
-  delegate_to: "{{ item }}"
+  delegate_to: '{{ item }}'
   loop: "{{ groups['cassandra_servers'] }}"
   loop_control:
-    index_var: count    
+    index_var: count
 
-- name: create client pcks12 file from
+- name: Create client pcks12 file from
   community.crypto.openssl_pkcs12:
     path: '{{ cassandra_ssl_keystore_directory }}/client{{ item }}-keystore.jks'
     friendly_name: 'client{{ item }}'
@@ -200,12 +200,12 @@
     action: export
     state: present
     owner: cassandra
-    group: cassandra    
+    group: cassandra
   with_sequence: count="{{ client_count }}"
   run_once: true
   delegate_to: localhost
 
-- name: add ca to truststore
+- name: Add ca to truststore
   community.general.java_cert:
     cert_path: '{{ cassandra_ssl_ca_directory }}/ca.crt'
     keystore_path: '{{ cassandra_ssl_truststore_directory }}/server.truststore.jks'
@@ -219,23 +219,25 @@
   run_once: true
   delegate_to: localhost
 
-- name: propagate truststore to cluster 
+- name: Propagate truststore to cluster
   copy:
     src: '{{ cassandra_ssl_truststore_directory }}/server.truststore.jks'
     dest: '{{ cassandra_ssl_truststore_directory }}/server.truststore.jks'
     owner: cassandra
     group: cassandra
+    mode: '0640'
   run_once: true
-  delegate_to: "{{ item }}"
+  delegate_to: '{{ item }}'
   loop: "{{ groups['cassandra_servers'][1:] }}"
 
 # moving ca crt for local client connection with cqlsh
-- name: propagate ca cert to cluster 
+- name: Propagate ca cert to cluster
   copy:
     src: '{{ cassandra_ssl_ca_directory }}/ca.crt'
     dest: '{{ cassandra_ssl_ca_directory }}/ca.crt'
     owner: cassandra
     group: cassandra
+    mode: '0640'
   run_once: true
-  delegate_to: "{{ item }}"
+  delegate_to: '{{ item }}'
   loop: "{{ groups['cassandra_servers'][1:] }}"

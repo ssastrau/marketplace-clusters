@@ -1,7 +1,6 @@
 ---
 # configure hostname and hosts file
-
-- name: configure hostnames
+- name: Configure hostnames
   hostname:
     use: systemd
     name: "{{ cassandra_data.server[count].instance.hostname }}"
@@ -11,7 +10,7 @@
   loop_control:
     index_var: count
 
-- name: update /etc/hosts on all of the nodes
+- name: Update /etc/hosts on all of the nodes
   blockinfile:
     path: /etc/hosts
     marker: "# {mark} cassandra servers"
@@ -20,4 +19,4 @@
       # Cassandra
       {%- for count in range(cluster_size) %}
       {{ cassandra_data.server[count].instance.ip_priv1 }} {{ cassandra_data.server[count].instance.hostname }}
-      {%- endfor %}    
+      {%- endfor %}

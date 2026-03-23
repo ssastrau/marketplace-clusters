@@ -1,28 +1,27 @@
 ---
 # roles/post/tasks/motd.yml
-
-- name: copy MOTD template to /etc/motd
+- name: Copy MOTD template to /etc/motd
   template:
     src: templates/motd.j2
     dest: /etc/motd
+    mode: '0644'
 
-- name: writing deployment credentils locally
+- name: Writing deployment credentils locally
   blockinfile:
     path: '/home/{{ sudo_username }}/.credentials'
-    create: yes
+    create: true
     owner: '{{ sudo_username }}'
     group: '{{ sudo_username }}'
-    mode: 0644    
+    mode: '0644'
     block: |
-      # system user 
+      # system user
       sudo username: {{ sudo_username }}
       Sudo username password: {{ sudo_password }}
-      # SSL Passwords 
+      # SSL Passwords
       CA password: {{ ca_password }}
       Keystore password: {{ keystore_password }}
       Truststore password: {{ truststore_password }}
       # DB creds
       Cassandra database user: {{ db_user }}
       Cassandra superuser password: {{ db_password }}
-
       PLEASE REMOVE THIS FILE ONCE YOU'VE LOGGED THESE PASSWORDS IN A SECURE PASSWORD MANAGER!

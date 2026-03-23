@@ -1,39 +1,37 @@
 ---
 # install cassandra
-
-- name: download Apache Cassandra GPG key
+- name: Download Apache Cassandra GPG key
   get_url:
     url: 'https://downloads.apache.org/cassandra/KEYS'
     dest: '/etc/apt/keyrings/apache-cassandra.asc'
+    mode: '0644'
 
-- name: adding cassandra repository
+- name: Adding cassandra repository
   apt_repository:
     repo: 'deb [signed-by=/etc/apt/keyrings/apache-cassandra.asc] https://debian.cassandra.apache.org 41x main'
     state: present
 
-- name: install basic packages
+- name: Install basic packages
   apt:
-    pkg:
-    - cassandra
-    - cassandra-tools
+    pkg: [cassandra, cassandra-tools]
     state: present
-    update_cache: yes
+    update_cache: true
 
-- name: stop cassandra to configure cluster
-  systemd: 
+- name: Stop cassandra to configure cluster
+  systemd:
     name: cassandra
     state: stopped
 
 # remove datadir to reconfigure cluster with new name
-- name: remove cassandra data directory 
+- name: Remove cassandra data directory
   file:
     path: '{{ cassandra_datadir }}'
     state: absent
 
-- name: create /var/lib/cassandra directory
+- name: Create /var/lib/cassandra directory
   file:
     path: '{{ cassandra_datadir }}'
     state: directory
     owner: cassandra
     group: cassandra
-    mode: 0755
+    mode: '0755'

@@ -1,49 +1,49 @@
 ---
 # configure cassandra cluster
-
-- name: creating cassandra config backup
+- name: Creating cassandra config backup
   copy:
     src: '{{ cassandra_config_directory }}/cassandra.yaml'
     dest: '{{ cassandra_config_directory }}/cassandra.yaml.original'
-    remote_src: yes
+    remote_src: true
     owner: cassandra
     group: cassandra
-    mode: 0644
+    mode: '0644'
 
-- name: update cassandra config
+- name: Update cassandra config
   template:
     src: templates/cassandra.yaml.j2
     dest: '{{ cassandra_config_directory }}/cassandra.yaml'
+    mode: '0644'
   loop: "{{ groups['cassandra_servers'] }}"
   run_once: true
   delegate_to: "{{ item }}"
   loop_control:
     index_var: count
 
-- name: update data center region
+- name: Update data center region
   lineinfile:
-    path: /etc/cassandra/cassandra-rackdc.properties 
+    path: /etc/cassandra/cassandra-rackdc.properties
     regexp: '^dc=dc1$'
     line: 'dc={{ region }}'
 
-- name: create cassandra hidden directory
+- name: Create cassandra hidden directory
   file:
     path: /root/.cassandra
     state: directory
-    mode: 0700
+    mode: '0700'
 
-- name: create conf files in cassandra hidden dir
+- name: Create conf files in cassandra hidden dir
   template:
     src: templates/cqlshrc.j2
     dest: /root/.cassandra/cqlshrc
-    mode: 0600
+    mode: '0600'
   run_once: true
   delegate_to: "{{ item }}"
   loop: "{{ groups['cassandra_servers'] }}"
   loop_control:
     index_var: count
 
-- name: start cassandra
-  systemd: 
+- name: Start cassandra
+  systemd:
     name: cassandra
     state: started

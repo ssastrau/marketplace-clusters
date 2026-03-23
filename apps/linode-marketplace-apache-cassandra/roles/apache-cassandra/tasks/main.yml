@@ -1,17 +1,16 @@
 ---
 # roles/apache-cassandra/tasks/main.yml
-
-- name: configure hostname
+- name: Configure hostname
   import_tasks: hostname.yml
 
-- name: install cassandra
+- name: Install cassandra
   import_tasks: install.yml
 
-- name: create cluster keystores and truststores
+- name: Create cluster keystores and truststores
   import_tasks: ssl.yml
 
-- name: configure cassandra
+- name: Configure cassandra
   import_tasks: cassandra.yml
 
-- name: create cassandra super user
+- name: Create cassandra super user
   import_tasks: superuser.yml

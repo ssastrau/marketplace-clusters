@@ -1,37 +1,36 @@
-# roles/common/tasks
-# common tasks for all linodes
 ---
-- name: apt update
+- name: Apt update
   apt:
-    update_cache: yes
+    update_cache: true
 
-- name: apt upgrade
+- name: Apt upgrade
   apt:
     upgrade: full
 
-- name: install basic packages
+- name: Install basic packages
   apt:
     pkg:
-    - net-tools
-    - htop
-    - rsync
-    - fail2ban
-    - ufw
-    - software-properties-common  
-    - gnupg2
-    - ssl-cert
-    - openjdk-11-jdk
-    - openjdk-11-jdk-headless
+      - net-tools
+      - htop
+      - rsync
+      - fail2ban
+      - ufw
+      - software-properties-common
+      - gnupg2
+      - ssl-cert
+      - openjdk-11-jdk
+      - openjdk-11-jdk-headless
     state: present
 
-- name: fail2ban jail.local
+- name: Fail2ban jail.local
   copy:
     src: /etc/fail2ban/jail.conf
     dest: /etc/fail2ban/jail.local
-    remote_src: yes
+    remote_src: true
+    mode: '0644'
   notify: start fail2ban
 
-- name: secure ssh configs
+- name: Secure ssh configs
   lineinfile:
     path: /etc/ssh/sshd_config
     regexp: "{{ item.search }}"
@@ -40,7 +39,7 @@
     - { search: '^\#?PermitRootLogin (yes|no)', replace: 'PermitRootLogin without-password' }
     - { search: '^\#?PasswordAuthentication (yes|no)', replace: 'PasswordAuthentication no' }
     - { search: '^\#?PubkeyAuthentication (yes|no)', replace: 'PubkeyAuthentication yes' }
-  notify: restart ssh
+  notify: Restart ssh
 
-- name: apply ufw rules
+- name: Apply ufw rules
   import_tasks: ufw_rules.yml

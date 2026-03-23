@@ -1,35 +1,38 @@
 ---
 # create cassandra database superuser
-- name: check nodetool status on each cassandra node
+- name: Check nodetool status on each cassandra node
   command: nodetool status
   register: nodetool_output
-  retries: 10 
-  delay: 20  
+  retries: 10
+  delay: 20
   until: >
     (nodetool_output.stdout | regex_findall('UN') | length) >= cluster_size
   run_once: true
   delegate_to: "{{ groups['cassandra_servers'][0] }}"
 
-- name: wait for port 9042 to become open
+- name: Wait for port 9042 to become open
   wait_for:
     port: 9042
     host: '{{ cassandra_data.server[0].instance.ip_priv1 }}'
     delay: 10
   run_once: true
-  delegate_to: "{{ groups['cassandra_servers'][0] }}"  
+  delegate_to: "{{ groups['cassandra_servers'][0] }}"
 
-- name: add superuser to cassandra
+- name: Add superuser to cassandra
   command: >
-    cqlsh {{ cassandra_data.server[0].instance.ip_priv1 }} -u cassandra -p cassandra --ssl -e "CREATE ROLE {{ db_user }} WITH SUPERUSER = true AND LOGIN = true AND PASSWORD = '{{ db_password }}';"
+    cqlsh {{ cassandra_data.server[0].instance.ip_priv1 }} -u cassandra -p cassandra
+    --ssl -e "CREATE ROLE {{ db_user }} WITH SUPERUSER = true AND LOGIN = true AND
+    PASSWORD = '{{ db_password }}';"
   run_once: true
   delegate_to: "{{ groups['cassandra_servers'][0] }}"
   retries: 3
   delay: 5
   register: result
-  until: result.rc == 0  
+  until: result.rc == 0
 
-- name: disable cassandra default user
+- name: Disable cassandra default user
   command: >
-    cqlsh {{ cassandra_data.server[0].instance.ip_priv1 }} -u {{ db_user }} -p {{ db_password }} --ssl -e "ALTER ROLE cassandra WITH SUPERUSER = false AND LOGIN = false;"
+    cqlsh {{ cassandra_data.server[0].instance.ip_priv1 }} -u {{ db_user }} -p {{ db_password }}
+    --ssl -e "ALTER ROLE cassandra WITH SUPERUSER = false AND LOGIN = false;"
   run_once: true
-  delegate_to: "{{ groups['cassandra_servers'][0] }}"  
+  delegate_to: "{{ groups['cassandra_servers'][0] }}"
