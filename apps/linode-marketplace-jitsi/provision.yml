@@ -14,14 +14,14 @@
   - name: get info about jitsi meet instances
     linode.cloud.instance_info:
       api_token: '{{ api_token }}'
-      label: '{{ jitsi_prefix }}{{ item }}-{{ uuid }}'
+      label: 'jitsi-instance-{{ uuid }}'
     register: jitsi_info
     with_sequence: count='{{ jitsi_count }}'
 
 # JVB
   - name: creating jitsi JVB instances
     linode.cloud.instance:
-      label: '{{ jvb_prefix }}{{ item }}-{{ uuid }}'
+      label: 'jvb-instance-{{ item }}-{{ uuid }}'
       api_token: '{{ api_token }}'
       type: '{{ jvb_type }}'
       region: '{{ region }}'
@@ -38,7 +38,7 @@
   - name: get info about jitsi JVB instances
     linode.cloud.instance_info:
       api_token: '{{ api_token }}'
-      label: '{{ jvb_prefix }}{{ item }}-{{ uuid }}'
+      label: 'jvb-instance-{{ item }}-{{ uuid }}'
     register: jvb_info
     with_sequence: count='{{ jvb_count }}'
 
