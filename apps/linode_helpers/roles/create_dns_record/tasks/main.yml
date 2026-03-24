@@ -70,7 +70,7 @@
   when: subdomain is defined
 
 - name: wait for DNS propogation
-  ansible.builtin.pause: 
+  ansible.builtin.pause:
     minutes: 3
 
 # it is recommended to use an external DNS resolver for domain validation

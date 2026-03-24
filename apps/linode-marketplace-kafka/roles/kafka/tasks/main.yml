@@ -1,0 +1,22 @@
+---
+# main
+
+- name: Configure hostname
+  import_tasks: hostname.yml
+  tags: test
+
+- name: Create kafka user
+  import_tasks: user.yml
+  tags: test
+
+- name: Installing kafka
+  import_tasks: install.yml
+  tags: test
+
+- name: Configure cluster certs
+  import_tasks: ssl.yml
+  tags: test
+
+- name: Configure kafka
+  import_tasks: configure.yml
+  tags: test

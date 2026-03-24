@@ -1,0 +1,15 @@
+---
+# create sudo username
+- name: Create sudo user
+  user:
+    name: "{{ sudo_username }}"
+    shell: /bin/bash
+    groups: sudo
+    password: "{{ sudo_password | password_hash('sha512') }}"
+    update_password: on_create
+    expires: -1
+    append: true
+    generate_ssh_key: true
+    ssh_key_bits: 4096
+    ssh_key_file: .ssh/id_rsa
+    state: present

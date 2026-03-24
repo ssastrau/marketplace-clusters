@@ -1,0 +1,18 @@
+---
+# create kafka system user and group
+- name: Create kafka group
+  group:
+    name: kafka
+    state: present
+    system: true
+
+- name: Create kafka user
+  user:
+    name: kafka
+    group: kafka
+    home: '{{ kafka_data_directory }}'
+    shell: /sbin/nologin
+    expires: -1
+    create_home: true
+    system: true
+    state: present

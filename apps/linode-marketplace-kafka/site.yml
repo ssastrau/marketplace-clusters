@@ -1,0 +1,8 @@
+---
+# configure kafka
+- name: Configure kafka servers
+  hosts: kafka
+  any_errors_fatal: true
+  user: root
+  vars_files: [group_vars/kafka/vars]
+  roles: [common, kafka, post]
