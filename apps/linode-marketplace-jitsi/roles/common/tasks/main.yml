@@ -2,48 +2,48 @@
 # roles/common/tasks/main.yml
 
 # common tasks for all linodes
-- name: force ipv4 with apt
+- name: Force ipv4 with apt
   copy:
     content: 'Acquire::ForceIPv4 "true";'
     dest: /etc/apt/apt.conf.d/99force-ipv4
     mode: '0600'
 
-- name: apt update
+- name: Apt update
   apt:
-    update_cache: yes
+    update_cache: true
 
-- name: apt upgrade
+- name: Apt upgrade
   apt:
     upgrade: full
 
-- name: install basic packages
+- name: Install basic packages
   apt:
     pkg:
-    - ntp
-    - gnupg2
-    - wget 
-    - curl
-    - htop
-    - rsync
-    - fail2ban
-    - python3-pip
-    - python3-mysqldb
-    - net-tools
-    - apt-transport-https
-    - lua5.2
-    - ufw
+      - ntp
+      - gnupg2
+      - wget
+      - curl
+      - htop
+      - rsync
+      - fail2ban
+      - python3-pip
+      - python3-mysqldb
+      - net-tools
+      - apt-transport-https
+      - lua5.2
+      - ufw
     state: present
 
 # remove fail2ban
-- name: fail2ban jail.local
+- name: Fail2ban jail.local
   copy:
     src: /etc/fail2ban/jail.conf
     dest: /etc/fail2ban/jail.local
-    remote_src: yes
+    remote_src: true
     mode: '0600'
   notify: start fail2ban
 
-- name: secure ssh configs
+- name: Secure ssh configs
   lineinfile:
     path: /etc/ssh/sshd_config
     regexp: "{{ item.regexp }}"
@@ -54,19 +54,17 @@
     - { regexp: '^\#?PubkeyAuthentication (yes|no)', line: 'PubkeyAuthentication yes' }
   notify: restart ssh
 
-- name: apply ufw rules
+- name: Apply ufw rules
   import_tasks: ufw_rules.yml
 
-- name: set _domain variable
+- name: Set _domain variable
   import_tasks: domain.yml
   run_once: true
   delegate_to: "localhost"
 
 # dns creation
-- name: create dns A record
+- name: Create dns A record
   import_tasks: create_dns_record.yml
   run_once: true
-  delegate_to: "localhost"  
-  when:
-    - token_password is defined
-    - default_dns is not defined
+  delegate_to: localhost
+  when: [token_password is defined, default_dns is not defined]

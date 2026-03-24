@@ -1,7 +1,6 @@
 ---
 # roles/post/tasks/sshkeys.yml
-
-- name: get root password
+- name: Get root password
   slurp:
     src: "/etc/shadow"
   run_once: true
@@ -9,27 +8,27 @@
   loop: "{{ groups['jitsi_servers'] }}"
   register: shadow
 
-- name: set root password
+- name: Set root password
   set_fact:
     root_password: "{{ shadow.results[0].content | b64decode | regex_search('^root.+') }}"
   run_once: true
   delegate_to: "localhost"
 
 # set account passwords
-- name: set root password on remote nodes
+- name: Set root password on remote nodes
   lineinfile:
     path: /etc/shadow
     regexp: '^root.+'
     line: '{{ root_password }}'
 
-- name: set ssh facts
+- name: Set ssh facts
   set_fact:
     add_keys_prompt: '{{ add_keys_prompt }}'
 
-- name: add account ssh keys
+- name: Add account ssh keys
   copy:
     src: '{{ local_home }}/.ssh/authorized_keys'
-    dest:  "{{ item.userdir }}/.ssh/authorized_keys"
+    dest: "{{ item.userdir }}/.ssh/authorized_keys"
     owner: "{{ item.user }}"
     group: "{{ item.user }}"
     mode: '0600'
@@ -38,13 +37,13 @@
     - { userdir: '/home/{{ username }}', user: '{{ username }}' }
   when: add_keys_prompt == 'yes'
 
-- name: remove ansible from authorized_keys
+- name: Remove ansible from authorized_keys
   lineinfile:
     dest: /root/.ssh/authorized_keys
     state: absent
     regexp: '^.+ansible$'
 
-- name: remove ansible ssh keys
+- name: Remove ansible ssh keys
   file:
     path: '{{ item }}'
     state: absent
