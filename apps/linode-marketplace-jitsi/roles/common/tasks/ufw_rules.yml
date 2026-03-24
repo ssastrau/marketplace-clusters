@@ -1,5 +1,5 @@
 ---
-# set app specific ufw rules 
+# set app specific ufw rules
 - name: Allow all access to tcp port 22
   community.general.ufw:
     rule: allow
@@ -17,10 +17,10 @@
   community.general.ufw:
     rule: allow
     port: '443'
-    proto: tcp    
+    proto: tcp
 
 # media traffic
-- name: Allow all access to tcp port 10000 
+- name: Allow all access to tcp port 10000
   community.general.ufw:
     rule: allow
     port: '10000'
@@ -32,9 +32,9 @@
     rule: allow
     port: '9090'
     proto: tcp
-    from_ip: "{{ jitsi_data.results.jitsi.0.instance.ip_priv1 }}"
+    from_ip: '{{ jitsi_data.results.jitsi.0.instance.ip_priv1 }}'
   run_once: true
-  delegate_to: "{{ item }}"
+  delegate_to: '{{ item }}'
   loop: "{{ groups['jvb_servers'] }}"
 
 # jvbs connect on this port to jitsi instance on public interface
@@ -43,7 +43,7 @@
     rule: allow
     port: '5222'
     proto: tcp
-    from_ip: "{{ jitsi_data.results.jvb[count].instance.jitsi_ip1 }}"
+    from_ip: '{{ jitsi_data.results.jvb[count].instance.jitsi_ip1 }}'
   run_once: true
   delegate_to: "{{ groups['jitsi_servers'][0] }}"
   loop: "{{ groups['jvb_servers'] }}"

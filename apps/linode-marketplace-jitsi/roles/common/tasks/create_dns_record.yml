@@ -1,41 +1,40 @@
 ---
 # apps/linode_helpers/roles/create_dns_record/tasks/main.yml
 # create dns records
-
-- name: get host default IPv4 address
+- name: Get host default IPv4 address
   debug:
     msg: "{{ ansible_default_ipv4.address }}"
   register: ip_address
 
-- name: print ip address
+- name: Print ip address
   ansible.builtin.debug:
     var: ip_address
 
-# loop through domains the provided API token has grants to. Creating an A record without a zone, 
+# loop through domains the provided API token has grants to. Creating an A record without a zone,
 # or creating a duplicate zone will fail the play.
-- name: check existence of domain zone
+- name: Check existence of domain zone
   block:
-    - name: lookup domain info
+    - name: Lookup domain info
       linode.cloud.domain_info:
         api_token: "{{ token_password }}"
         domain: "{{ domain }}"
       register: domain_output
 
-    - name: print domain info
+    - name: Print domain info
       ansible.builtin.debug:
         var: domain_output.zone_file.zone_file.0
 
-    - name: check domain existence
+    - name: Check domain existence
       ansible.builtin.debug:
-        msg: "domain zone already exists"
+        msg: domain zone already exists
       when: domain in domain_output.zone_file.zone_file.0
 
   rescue:
-    - name: handle failure
+    - name: Handle failure
       ansible.builtin.debug:
         msg: "domain zone does not exist"
 
-- name: create a dns zone
+- name: Create a dns zone
   linode.cloud.domain:
     api_token: "{{ token_password }}"
     domain: "{{ domain }}"
@@ -46,7 +45,7 @@
     - domain is defined
     - domain_output.zone_file.zone_file.0 is not defined
 
-- name: create A record for domain
+- name: Create A record for domain
   linode.cloud.domain_record:
     api_token: "{{ token_password }}"
     domain: "{{ domain }}"
@@ -55,11 +54,9 @@
     target: "{{ ansible_default_ipv4.address }}"
     ttl_sec: 30
     state: present
-  when:
-    - domain is defined
-    - subdomain == "www"
+  when: [domain is defined, subdomain == "www"]
 
-- name: create A record for subdomain
+- name: Create A record for subdomain
   linode.cloud.domain_record:
     api_token: "{{ token_password }}"
     domain: "{{ domain }}"
@@ -70,8 +67,8 @@
     state: present
   when: subdomain is defined
 
-- name: wait for DNS propogation
-  ansible.builtin.pause: 
+- name: Wait for DNS propogation
+  ansible.builtin.pause:
     minutes: 3
 
 # it is recommended to use an external DNS resolver for domain validation
@@ -82,9 +79,7 @@
   until: ip_address.msg in dig_result.msg
   retries: 5
   delay: 10
-  when:
-    - domain is defined
-    - subdomain == "www"
+  when: [domain is defined, subdomain == "www"]
 
 - name: A record lookup for subdomain
   debug:

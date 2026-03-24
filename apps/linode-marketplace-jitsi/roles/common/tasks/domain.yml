@@ -1,23 +1,19 @@
 ---
 # roles/common/tasks/domain.yml
-- name: set dns fact for subdomain
+- name: Set dns fact for subdomain
   set_fact:
     _domain: '{{ subdomain }}.{{ domain }}'
-    cacheable: yes
-  when:
-    - domain is defined
-    - subdomain != "www"
-    
-- name: set dns fact for domain
+    cacheable: true
+  when: [domain is defined, subdomain != "www"]
+
+- name: Set dns fact for domain
   set_fact:
     _domain: '{{ domain }}'
-    cacheable: yes
-  when: 
-    - domain is defined
-    - subdomain == "www"
+    cacheable: true
+  when: [domain is defined, subdomain == "www"]
 
-- name: set dns fact for default dns
+- name: Set dns fact for default dns
   set_fact:
     _domain: '{{ default_dns }}'
-    cacheable: yes
+    cacheable: true
   when: default_dns is defined

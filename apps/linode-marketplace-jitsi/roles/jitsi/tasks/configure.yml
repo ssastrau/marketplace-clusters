@@ -1,7 +1,6 @@
 ---
 # roles/jitsi/tasks/configure.yml
-
-- name: set jvb conf var
+- name: Set jvb conf var
   set_fact:
     jvb_props: '/etc/jitsi/videobridge/sip-communicator.properties'
     nginx_conf: "/etc/nginx/sites-enabled/{{ _domain }}.conf"
@@ -11,15 +10,14 @@
   run_once: true
   delegate_to: localhost
 
-- name: stopping jitsi-videobridge2 service
+- name: Stopping jitsi-videobridge2 service
   systemd:
     name: jitsi-videobridge2
-    state: stopped    
+    state: stopped
 
 # slurp jvb conf from jitsi instance and
-# copy conf to jvb instances. 
-
-- name: getting jvb config from jitsi instance
+# copy conf to jvb instances.
+- name: Getting jvb config from jitsi instance
   slurp:
     src: "{{ jvb_props }}"
   run_once: true
@@ -27,26 +25,27 @@
   loop: "{{ groups['jitsi_servers'] }}"
   register: sip_communicator_properties
 
-- name: creating backup of original jvb config
+- name: Creating backup of original jvb config
   copy:
     src: "{{ jvb_props }}"
     dest: "{{ jvb_props }}.bak"
     remote_src: true
+    mode: '0644'
   run_once: true
   delegate_to: "{{ item }}"
-  loop: "{{ groups['jvb_servers'] }}"    
+  loop: "{{ groups['jvb_servers'] }}"
 
-- name: copying jvb config to jvb instances
+- name: Copying jvb config to jvb instances
   copy:
     content: "{{ sip_communicator_properties.results[0].content | b64decode }}"
     dest: "{{ jvb_props }}"
+    mode: '0644'
   run_once: true
   delegate_to: "{{ item }}"
   loop: "{{ groups['jvb_servers'] }}"
 
 # update config
-
-- name: update bridge hostname 
+- name: Update bridge hostname
   lineinfile:
     path: "{{ jvb_props }}"
     regexp: '^\#?org.jitsi.videobridge.xmpp.user.shard.HOSTNAME=.*'
@@ -55,7 +54,7 @@
   delegate_to: "{{ item }}"
   loop: "{{ groups['jvb_servers'] }}"
 
-- name: update bridge nickname
+- name: Update bridge nickname
   lineinfile:
     path: "{{ jvb_props }}"
     regexp: '^\#?org.jitsi.videobridge.xmpp.user.shard.MUC_NICKNAME=.*'
@@ -66,7 +65,7 @@
   loop_control:
     index_var: count
 
-- name: disabling cert validation
+- name: Disabling cert validation
   lineinfile:
     path: "{{ jvb_props }}"
     insertafter: 'EOF'
@@ -75,7 +74,7 @@
   delegate_to: "{{ item }}"
   loop: "{{ groups['jvb_servers'] }}"
 
-- name: adding Octo region
+- name: Adding Octo region
   lineinfile:
     path: "{{ jvb_props }}"
     insertafter: 'EOF'
@@ -85,8 +84,7 @@
   loop: "{{ groups['jvb_servers'] }}"
 
 # update nginx conf
-
-- name: validating jvb upstream marker
+- name: Validating jvb upstream marker
   slurp:
     src: "{{ nginx_conf }}"
   run_once: true
@@ -94,27 +92,25 @@
   loop: "{{ groups['jitsi_servers'] }}"
   register: jvbupstream
 
-- name: replace nginx jvb upstream (1/2)
+- name: Replace nginx jvb upstream (1/2)
   replace:
     path: "{{ nginx_conf }}"
     regexp: '^upstream jvb1\s*{[^}]*}'
     replace: |
       #jinja2: trim_blocks:False
-      # BEGIN UPSTREAM
-      {%- for count in range(jvb_count | int) %}
+      # BEGIN UPSTREAM{%- for count in range(jvb_count | int) %}
       upstream jvb{{ count + 1 }} {
         zone upstreams 64K;
         server {{ jitsi_data.results.jvb[count].instance.ip_priv1 }}:9090;
         keepalive 2;
-      }
-      {%- endfor %}
+      }{%- endfor %}
       # END UPSTREAM
   run_once: true
   delegate_to: "{{ item }}"
   loop: "{{ groups['jitsi_servers'] }}"
   when: "'# BEGIN UPSTREAM' not in jvbupstream.results[0].content | b64decode"
 
-- name: replace nginx jvb upstream (2/2)
+- name: Replace nginx jvb upstream (2/2)
   blockinfile:
     path: "{{ nginx_conf }}"
     marker: '# {mark} UPSTREAM'
@@ -125,14 +121,13 @@
         zone upstreams 64K;
         server {{ jitsi_data.results.jvb[count].instance.ip_priv1 }}:9090;
         keepalive 2;
-      }
-      {%- endfor %}
+      }{%- endfor %}
   run_once: true
   delegate_to: "{{ item }}"
   loop: "{{ groups['jitsi_servers'] }}"
   when: "'# BEGIN UPSTREAM' in jvbupstream.results[0].content | b64decode"
 
-- name: validating colibri-ws marker
+- name: Validating colibri-ws marker
   slurp:
     src: "{{ nginx_conf }}"
   run_once: true
@@ -140,29 +135,27 @@
   loop: "{{ groups['jitsi_servers'] }}"
   register: colibriws
 
-- name: update colibri-ws location with correct jvb upstream (1/2)
+- name: Update colibri-ws location with correct jvb upstream (1/2)
   replace:
     path: "{{ nginx_conf }}"
     regexp: '\s{4}location ~ \^\/colibri-ws\/default-id\/\(\.\*\)\s*{[^}]*}'
     replace: |
       #jinja2: trim_blocks:False
-          # BEGIN COLIBRI-WS
-      {%- for count in range(jvb_count | int) %}
+          # BEGIN COLIBRI-WS{%- for count in range(jvb_count | int) %}
           location ~ ^/colibri-ws/jvb{{ count + 1 }}/(.*) {
             proxy_pass http://jvb{{ count + 1 }}/colibri-ws/jvb{{ count + 1 }}/$1$is_args$args;
             proxy_http_version 1.1;
             proxy_set_header Upgrade $http_upgrade;
             proxy_set_header Connection "upgrade";
             tcp_nodelay on;
-          }
-      {%- endfor %}
+          }{%- endfor %}
           # END COLIBRI-WS
   run_once: true
   delegate_to: "{{ item }}"
   loop: "{{ groups['jitsi_servers'] }}"
   when: "'# BEGIN COLIBRI-WS' not in colibriws.results[0].content | b64decode"
 
-- name: update colibri-ws location with correct jvb upstream (2/2)
+- name: Update colibri-ws location with correct jvb upstream (2/2)
   blockinfile:
     path: "{{ nginx_conf }}"
     marker: '    # {mark} COLIBRI-WS'
@@ -175,17 +168,16 @@
             proxy_set_header Upgrade $http_upgrade;
             proxy_set_header Connection "upgrade";
             tcp_nodelay on;
-          }
-      {%- endfor %}
+          }{%- endfor %}
   run_once: true
   delegate_to: "{{ item }}"
   loop: "{{ groups['jitsi_servers'] }}"
   when: "'# BEGIN COLIBRI-WS' in colibriws.results[0].content | b64decode"
 
-- name: add server-id to JVBs
+- name: Add server-id to JVBs
   lineinfile:
     path: "{{ jvb_conf }}"
-    line: "        server-id = jvb{{ count + 1}}"
+    line: "        server-id = jvb{{ count + 1 }}"
     insertafter: 'tls = true'
   run_once: true
   delegate_to: "{{ item }}"
@@ -193,7 +185,7 @@
   loop_control:
     index_var: count
 
-- name: validating jvb relay marker
+- name: Validating jvb relay marker
   slurp:
     src: "{{ jvb_conf }}"
   run_once: true
@@ -201,7 +193,7 @@
   loop: "{{ groups['jvb_servers'] }}"
   register: jvbrelay
 
-- name: enabling videobridge relay
+- name: Enabling videobridge relay
   blockinfile:
     path: "{{ jvb_conf }}"
     marker: '# {mark} JVB-RELAY'
@@ -219,8 +211,7 @@
     index_var: count
 
 # jicofo update
-
-- name: splitting the traffic between bridges
+- name: Splitting the traffic between bridges
   lineinfile:
     path: "{{ jicofo_conf }}"
     line: "    selection-strategy = SplitBridgeSelectionStrategy"
@@ -229,7 +220,7 @@
   delegate_to: "{{ item }}"
   loop: "{{ groups['jitsi_servers'] }}"
 
-- name: validating octo marker
+- name: Validating octo marker
   slurp:
     src: "{{ jicofo_conf }}"
   run_once: true
@@ -237,7 +228,7 @@
   loop: "{{ groups['jitsi_servers'] }}"
   register: octo
 
-- name: enable octo in jicofo
+- name: Enable octo in jicofo
   blockinfile:
     path: "{{ jicofo_conf }}"
     marker: '  # {mark} OCTO-RELAY'
@@ -251,8 +242,7 @@
   loop: "{{ groups['jitsi_servers'] }}"
 
 # restart services
-
-- name: restart nginx service on jitsi meet server
+- name: Restart nginx service on jitsi meet server
   systemd:
     name: nginx
     state: restarted
@@ -260,7 +250,7 @@
   delegate_to: "{{ item }}"
   loop: "{{ groups['jitsi_servers'] }}"
 
-- name: restart prosody service on jitsi meet server
+- name: Restart prosody service on jitsi meet server
   systemd:
     name: prosody
     state: restarted
@@ -268,15 +258,15 @@
   delegate_to: "{{ item }}"
   loop: "{{ groups['jitsi_servers'] }}"
 
-- name: restart jicofo service on jitsi meet server
+- name: Restart jicofo service on jitsi meet server
   systemd:
     name: jicofo
     state: restarted
   run_once: true
   delegate_to: "{{ item }}"
-  loop: "{{ groups['jitsi_servers'] }}"  
+  loop: "{{ groups['jitsi_servers'] }}"
 
-- name: starting jitsi-videobridge2 service on jvb
+- name: Starting jitsi-videobridge2 service on jvb
   systemd:
     name: jitsi-videobridge2
     state: restarted
@@ -284,7 +274,7 @@
   delegate_to: "{{ item }}"
   loop: "{{ groups['jvb_servers'] }}"
 
-- name: disable jitsi-videobridge2 service on jitsi server
+- name: Disable jitsi-videobridge2 service on jitsi server
   systemd:
     name: jitsi-videobridge2
     enabled: false

@@ -1,23 +1,23 @@
 ---
 # roles/jitsi/tasks/repo.yml
-
-- name: download prosody GPG key
+- name: Download prosody GPG key
   apt_key:
     url: https://prosody.im/files/prosody-debian-packages.key
 
-- name: add jitsi GPG key
+- name: Add jitsi GPG key
   get_url:
     url: https://download.jitsi.org/jitsi-key.gpg.key
     dest: /tmp/jitsi-key.gpg
+    mode: '0644'
 
-- name: dearmouring jitsi key
+- name: Dearmouring jitsi key
   shell: gpg --dearmor < /tmp/jitsi-key.gpg > //usr/share/keyrings/jitsi-keyring.gpg
 
-- name: add jitsi repo
+- name: Add jitsi repo
   ansible.builtin.apt_repository:
     filename: jitsi-stable
     repo: 'deb [signed-by=/usr/share/keyrings/jitsi-keyring.gpg] https://download.jitsi.org stable/'
 
-- name: apt update
+- name: Apt update
   apt:
-    update_cache: yes
+    update_cache: true
