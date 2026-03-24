@@ -17,7 +17,6 @@
       - python3-mysqldb
       - net-tools
       - apt-transport-https
-      - lua5.2
       - ufw
     state: present
 

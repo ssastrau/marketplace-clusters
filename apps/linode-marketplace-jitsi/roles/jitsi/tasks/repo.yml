@@ -1,8 +1,18 @@
 ---
 # roles/jitsi/tasks/repo.yml
 - name: Download prosody GPG key
-  apt_key:
+  get_url:
     url: https://prosody.im/files/prosody-debian-packages.key
+    dest: /tmp/prosody.key
+    mode: '0644'
+
+- name: Dearmour prosody GPG key
+  shell: gpg --dearmor < /tmp/prosody.key > /usr/share/keyrings/prosody-keyring.gpg
+
+- name: Add prosody repository
+  ansible.builtin.apt_repository:
+    filename: prosody
+    repo: 'deb [signed-by=/usr/share/keyrings/prosody-keyring.gpg] https://packages.prosody.im/debian jammy main'
 
 - name: Add jitsi GPG key
   get_url:
