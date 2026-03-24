@@ -14,6 +14,22 @@
     value: "Generate a new self-signed certificate (You will later get a chance to obtain a Let's encrypt certificate)'"
     vtype: select
 
+- name: Install lua5.4
+  apt:
+    pkg: lua5.4
+    state: present
+  run_once: true
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['jitsi_servers'] }}"
+
+- name: Pin lua5.4 as default lua interpreter
+  shell: update-alternatives --set lua-interpreter /usr/bin/lua5.4
+  args:
+    executable: /bin/bash
+  run_once: true
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['jitsi_servers'] }}"
+
 - name: Installing full jitsi meet suite on jitsi instances only
   apt:
     pkg: jitsi-meet
