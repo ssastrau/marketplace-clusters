@@ -11,25 +11,25 @@
     filename: hashicorp
     repo: 'deb [signed-by=/etc/apt/trusted.gpg.d/hashicorp.gpg.asc] https://apt.releases.hashicorp.com jammy main'
 
-- name: update repos 
+- name: Update repos
   apt:
-    update_cache: yes 
+    update_cache: 'yes'
 
-- name: creating consul data dir
+- name: Creating consul data dir
   file:
     path: /opt/consul
     state: directory
     mode: '0755'
 
-- name: install consul package
-  apt: 
+- name: Install consul package
+  apt:
     name: consul
     state: present
 
-- name: move systemd service files
-  ansible.builtin.copy: 
+- name: Move systemd service files
+  ansible.builtin.copy:
     src: files/consul.service
-    dest: /etc/systemd/system/consul.service 
+    dest: /etc/systemd/system/consul.service
     owner: root
     group: root
     mode: '0664'

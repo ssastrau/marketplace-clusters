@@ -1,4 +1,4 @@
 ---
-- name: provisioning nomad clients
+- name: Provisioning nomad clients
   import_tasks: provision.yml
   when: cluster_mode == "client"
