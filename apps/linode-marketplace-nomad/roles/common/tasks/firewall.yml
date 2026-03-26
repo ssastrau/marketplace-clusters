@@ -1,36 +1,35 @@
 ---
-
-- name: installing firewalld
+- name: Installing firewalld
   apt:
     name: firewalld
     state: present
 
-- name: updating firewalld.conf file
+- name: Updating firewalld.conf file
   lineinfile:
     path: /etc/firewalld/firewalld.conf
     regexp: '^IndividualCalls=no'
     line: IndividualCalls=yes
-  notify: restart firewalld
+  notify: Restart firewalld
 
-- name: configure firewall on nomad cluster
+- name: Configure firewall on nomad cluster
   ansible.builtin.copy:
     src: files/firewall_cluster.xml
     dest: /etc/firewalld/zones/cluster_firewall.xml
     owner: root
     group: root
-    mode: 0664
+    mode: '0664'
 
-- name: allow http and https on primary nomad server
+- name: Allow http and https on primary nomad server
   ansible.builtin.copy:
     src: files/public.xml
     dest: /etc/firewalld/zones/public.xml
     owner: root
     group: root
-    mode: 0664
+    mode: '0664'
   run_once: true
   delegate_to: "{{ groups['nomad_cluster'][0] }}"
 
-- name: restart firewalld
+- name: Restart firewalld
   systemd:
     name: firewalld
     state: restarted

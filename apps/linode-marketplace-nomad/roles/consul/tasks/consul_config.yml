@@ -1,37 +1,37 @@
---- 
-- name: creating consul config dir
-  ansible.builtin.file: 
+---
+- name: Creating consul config dir
+  ansible.builtin.file:
     path: /etc/consul.d
-    state: directory 
+    state: directory
     mode: '0755'
 
-- name: moving consul.hcl
-  template: 
+- name: Moving consul.hcl
+  template:
     src: ../templates/consul.hcl.j2
     dest: /etc/consul.d/consul.hcl
     owner: root
     group: root
     mode: '0755'
   run_once: true
-  delegate_to: "{{ item }}"
+  delegate_to: '{{ item }}'
   loop: "{{ groups['nomad_cluster'] }}"
   loop_control:
     index_var: count
 
-- name: create ACL dir
-  ansible.builtin.file: 
+- name: Create ACL dir
+  ansible.builtin.file:
     path: /ops/shared/config
     state: directory
-    mode: '0755' 
+    mode: '0755'
 
 # only on cluster nodes.
-- name: move consul ACL file
-  ansible.builtin.copy: 
+- name: Move consul ACL file
+  ansible.builtin.copy:
     src: files/consul-acl-nomad-auto-join.hcl
     dest: /ops/shared/config/consul-acl-nomad-auto-join.hcl
     owner: root
     group: root
-    mode: '0755' 
+    mode: '0755'
   run_once: true
-  delegate_to: "{{ item }}"
+  delegate_to: '{{ item }}'
   loop: "{{ groups['nomad_cluster'] }}"

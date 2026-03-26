@@ -1,5 +1,5 @@
 ---
-- name: bootstrap consul 
+- name: Bootstrap consul
   ansible.builtin.shell: consul acl bootstrap
   register: result
   until: "result is not failed"
@@ -8,54 +8,54 @@
   run_once: true
   delegate_to: "{{ groups['nomad_cluster'][0] }}"
 
-- name: set consul token fact 
-  ansible.builtin.set_fact: 
+- name: Set consul token fact
+  ansible.builtin.set_fact:
     consul_bootstrap_token: "{{ result.stdout | regex_search('SecretID:\\s+(\\S+)', '\\1') }}"
-    cacheable: yes
+    cacheable: true
   run_once: true
   delegate_to: "{{ groups['nomad_cluster'][0] }}"
 
-- name: write to vars to validate play
-  ansible.builtin.lineinfile: 
-     path: /tmp/linode/group_vars/nomad/vars
-     insertafter: EOF
-     line: 'consul_bootstrap_token: {{ consul_bootstrap_token[0] }}'
+- name: Write to vars to validate play
+  ansible.builtin.lineinfile:
+    path: /tmp/marketplace-clusters/apps/linode-marketplace-nomad/group_vars/nomad/vars
+    insertafter: EOF
+    line: 'consul_bootstrap_token: {{ consul_bootstrap_token[0] }}'
   run_once: true
   delegate_to: "{{ groups['nomad_cluster'][0] }}"
 
-- name: create consul policy
-  ansible.builtin.shell: consul acl policy create -name 'nomad-auto-join' 
+- name: Create consul policy
+  ansible.builtin.shell: consul acl policy create -name 'nomad-auto-join'
     -rules="@/ops/shared/config/consul-acl-nomad-auto-join.hcl"
     -token={{ consul_bootstrap_token[0] }}
   delegate_to: "{{ groups['nomad_cluster'][0] }}"
   run_once: true
 
-- name: create consul role
-  ansible.builtin.shell: consul acl role create -name "nomad-auto-join" 
-    -description "Role with policies necessary for nomad servers and clients to auto-join via Consul." 
-    -policy-name "nomad-auto-join" 
+- name: Create consul role
+  ansible.builtin.shell: consul acl role create -name "nomad-auto-join"
+    -description "Role with policies necessary for nomad servers and clients to auto-join via Consul."
+    -policy-name "nomad-auto-join"
     -token={{ consul_bootstrap_token[0] }}
   run_once: true
   delegate_to: "{{ groups['nomad_cluster'][0] }}"
 
-- name: create nomad autojoin token
-  ansible.builtin.shell: consul acl token create -description "Nomad server/client auto-join token" 
-    -role-name nomad-auto-join -token={{ consul_bootstrap_token[0] }}
+- name: Create nomad autojoin token
+  ansible.builtin.shell: consul acl token create -description "Nomad server/client
+    auto-join token" -role-name nomad-auto-join -token={{ consul_bootstrap_token[0] }}
   register: result
   run_once: true
   delegate_to: "{{ groups['nomad_cluster'][0] }}"
 
-- name: set consul_nomad_autojoin_token fact 
-  ansible.builtin.set_fact: 
+- name: Set consul_nomad_autojoin_token fact
+  ansible.builtin.set_fact:
     consul_nomad_autojoin_token: "{{ result.stdout | regex_search('SecretID:\\s+(\\S+)', '\\1') }}"
-    cacheable: yes
+    cacheable: true
   run_once: true
   delegate_to: "{{ groups['nomad_cluster'][0] }}"
 
-- name: write to vars to validate play
-  ansible.builtin.lineinfile: 
-     path: /tmp/linode/group_vars/nomad/vars
-     insertafter: EOF
-     line: 'consul_nomad_autojoin_token: {{ consul_nomad_autojoin_token[0] }}'
+- name: Write to vars to validate play
+  ansible.builtin.lineinfile:
+    path: /tmp/marketplace-clusters/apps/linode-marketplace-nomad/group_vars/nomad/vars
+    insertafter: EOF
+    line: 'consul_nomad_autojoin_token: {{ consul_nomad_autojoin_token[0] }}'
   run_once: true
   delegate_to: "{{ groups['nomad_cluster'][0] }}"

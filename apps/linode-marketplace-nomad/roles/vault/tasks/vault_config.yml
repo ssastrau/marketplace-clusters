@@ -1,12 +1,12 @@
 ---
-- name: creating vault config dir
-  file: 
+- name: Creating vault config dir
+  file:
     path: /etc/vault.d
-    state: directory 
+    state: directory
     mode: '0755'
 
-- name: moving vault.hcl
-  template: 
+- name: Moving vault.hcl
+  template:
     src: ../templates/vault.hcl.j2
     dest: /etc/vault.d/vault.hcl
     owner: root

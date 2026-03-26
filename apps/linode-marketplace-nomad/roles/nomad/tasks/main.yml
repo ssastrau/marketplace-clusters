@@ -1,15 +1,15 @@
 ---
-- name: install nomad
+- name: Install nomad
   import_tasks: nomad_install.yml
 
-- name: configure nomad
+- name: Configure nomad
   import_tasks: nomad_config.yml
 
-- name: run nomad
+- name: Run nomad
   import_tasks: nomad_run.yml
 
-- name: bootstrap nomad
+- name: Bootstrap nomad
   import_tasks: nomad_bootstrap.yml
 
-- name: nginx install
-  import_tasks: nginx.yml  
+- name: Nginx install
+  import_tasks: nginx.yml

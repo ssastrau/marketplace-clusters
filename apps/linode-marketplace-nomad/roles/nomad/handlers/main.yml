@@ -1,17 +1,17 @@
 ---
--  name: restart firewalld
-   systemd:
+- name: Restart firewalld
+  systemd:
     name: firewalld
     state: restarted
-    enabled: yes
+    enabled: true
 
-- name: restart nomad
-  systemd: 
+- name: Restart nomad
+  systemd:
     name: nomad.service
     state: restarted
-    enabled: yes
+    enabled: true
 
-- name: reload nginx
+- name: Reload nginx
   service:
     name: nginx
-    state: reloaded    
+    state: reloaded

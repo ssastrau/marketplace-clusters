@@ -1,69 +1,57 @@
+---
 # roles/common/tasks
-
-- name: configure hostnames for cluster nodes
+- name: Configure hostnames for cluster nodes
   hostname:
     use: systemd
-    name: "{{ nomad_data.server[count].instance.hostname }}"
+    name: '{{ nomad_data.server[count].instance.hostname }}'
   run_once: true
-  delegate_to: "{{ item }}"
+  delegate_to: '{{ item }}'
   loop: "{{ groups['nomad_cluster'] }}"
   loop_control:
     index_var: count
 
-- name: configure hostnames for client nodes
+- name: Configure hostnames for client nodes
   hostname:
     use: systemd
-    name: "{{ nomad_data.client[count].instance.hostname }}"
+    name: '{{ nomad_data.client[count].instance.hostname }}'
   run_once: true
-  delegate_to: "{{ item }}"
+  delegate_to: '{{ item }}'
   loop: "{{ groups['nomad_client'] }}"
   loop_control:
     index_var: count
 
-- name: update /etc/hosts on all of the nodes
+- name: Update /etc/hosts on all of the nodes
   blockinfile:
     path: /etc/hosts
-    marker: "# {mark} nomad servers"
+    marker: '# {mark} nomad servers'
     block: |
       #jinja2: trim_blocks:False
-      # nomad
-      {%- for count in range(servers) %}
+      # nomad{%- for count in range(servers) %}
       {{ nomad_data.server[count].instance.ip_priv1 }} {{ nomad_data.server[count].instance.hostname }}
       {%- endfor %}
       {%- for count in range(clients) %}
       {{ nomad_data.client[count].instance.ip_priv1 }} {{ nomad_data.client[count].instance.hostname }}
       {%- endfor %}
 
-- name: apt update
-  apt:
-    update_cache: yes
+- name: Update system packages
+  import_role:
+    name: update_pkgs
 
-- name: apt upgrade
-  apt:
-    upgrade: full
-
-- name: install basic packages
+- name: Install basic packages
   apt:
     pkg:
-    - htop
-    - rsync
-    - software-properties-common  
-    - gnupg2
-    - ssl-cert
-    - python3-passlib
-    #- firewalld
+      - htop
+      - rsync
+      - software-properties-common
+      - gnupg2
+      - ssl-cert
+      - python3-passlib
     state: present
 
-- name: configure firewalld
+- name: Configure firewalld
   import_tasks: firewall.yml
 
-- name: secure ssh configs
-  lineinfile:
-    path: /etc/ssh/sshd_config
-    regexp: "{{ item.search }}"
-    line: "{{ item.replace }}"
-  loop:
-    - { search: '^\#?PermitRootLogin (yes|no)', replace: 'PermitRootLogin without-password' }
-    - { search: '^\#?PasswordAuthentication (yes|no)', replace: 'PasswordAuthentication no' }
-    - { search: '^\#?PubkeyAuthentication (yes|no)', replace: 'PubkeyAuthentication yes' }
-  notify: restart ssh
+- name: Secure ssh
+  import_role:
+    name: securessh
+  when: disable_root is defined
