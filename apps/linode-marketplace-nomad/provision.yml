@@ -13,7 +13,7 @@
 
   - name: creating nomad cluster
     linode.cloud.instance:
-      label: '{{ instance_prefix }}-server-{{ item | int + 1 }}-{{ uuid }}'
+      label: 'nomad-server-{{ item | int + 1 }}-{{ uuid }}'
       api_token: '{{ api_token }}'
       type: '{{ type }}'
       region: '{{ region }}'
@@ -29,7 +29,7 @@
 
   - name: creating nomad clients
     linode.cloud.instance:
-      label: '{{ instance_prefix }}-client-{{ item | int }}-{{ uuid }}'
+      label: 'nomad-client-{{ item | int }}-{{ uuid }}'
       api_token: '{{ api_token }}'
       type: '{{ type }}'
       region: '{{ region }}'
@@ -46,14 +46,14 @@
   - name: get info about the client instances
     linode.cloud.instance_info:
       api_token: '{{ api_token }}'
-      label: '{{ instance_prefix }}-client-{{ item | int }}-{{ uuid }}'
+      label: 'nomad-client-{{ item | int }}-{{ uuid }}'
     register: client_info
     with_sequence: count='{{ clients }}'
 
   - name: get info about the server instances
     linode.cloud.instance_info:
       api_token: '{{ api_token }}'
-      label: '{{ instance_prefix }}-server-{{ item | int }}-{{ uuid }}'
+      label: 'nomad-server-{{ item | int }}-{{ uuid }}'
     register: server_info
     with_sequence: count='{{ servers }}'
 
