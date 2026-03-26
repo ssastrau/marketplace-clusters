@@ -1,0 +1,18 @@
+--- 
+- name: creating nomad config dir
+  ansible.builtin.file: 
+    path: /etc/nomad.d
+    state: directory 
+    mode: '0755'
+  when: cluster_mode == "client"
+
+- name: moving nomad.hcl
+  template: 
+    src: ../../nomad/templates/nomad.hcl.j2
+    dest: /etc/nomad.d/nomad.hcl
+    owner: root
+    group: root
+    mode: '0755'
+  run_once: true
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['nomad_client'] }}"

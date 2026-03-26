@@ -1,0 +1,89 @@
+# roles/common/tasks
+
+- name: configure hostnames for client nodes
+  hostname:
+    use: systemd
+    name: "{{ nomad_data.client[count].instance.hostname }}"
+  run_once: true
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['nomad_client'] }}"
+  loop_control:
+    index_var: count    
+
+- name: update /etc/hosts on all of the nodes
+  blockinfile:
+    path: /etc/hosts
+    marker: "# {mark} nomad servers"
+    block: |
+      #jinja2: trim_blocks:False
+      # nomad
+      {%- for count in range(cluster_size) %}
+      {{ nomad_data.client[count].instance.ip_priv1 }} {{ nomad_data.client[count].instance.hostname }}
+      {%- endfor %}
+  when: 
+    - cluster_mode == 'client'
+    - is_provisioner == 'true'
+
+# allows cluster play to use correct client var
+- name: update /etc/hosts on all of the nodes
+  blockinfile:
+    path: /etc/hosts
+    marker: "# {mark} nomad servers"
+    block: |
+      #jinja2: trim_blocks:False
+      # nomad
+      {%- for count in range(clients) %}
+      {{ nomad_data.client[count].instance.ip_priv1 }} {{ nomad_data.client[count].instance.hostname }}
+      {%- endfor %}
+  when:
+    - cluster_mode == 'client'
+    - is_provisioner == 'false'
+
+- name: apt update
+  apt:
+    update_cache: yes
+
+- name: apt upgrade
+  apt:
+    upgrade: full
+
+- name: install basic packages
+  apt:
+    pkg:
+    - htop
+    - rsync
+    - software-properties-common  
+    - gnupg2
+    - ssl-cert
+    - python3-redis
+    - python3-passlib
+    state: present
+
+- name: configure firewalld
+  import_tasks: firewall.yml
+
+- name: add docker repo key 
+  apt_key: 
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: adding docker repo 
+  apt_repository: 
+    repo: deb https://download.docker.com/linux/ubuntu jammy stable
+
+- name: install docker-ce 
+  apt:
+    name: docker-ce
+    state: latest
+    update_cache: yes
+
+- name: secure ssh configs
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "{{ item.search }}"
+    line: "{{ item.replace }}"
+  loop:
+    - { search: '^\#?PermitRootLogin (yes|no)', replace: 'PermitRootLogin without-password' }
+    - { search: '^\#?PasswordAuthentication (yes|no)', replace: 'PasswordAuthentication no' }
+    - { search: '^\#?PubkeyAuthentication (yes|no)', replace: 'PubkeyAuthentication yes' }
+  notify: restart ssh

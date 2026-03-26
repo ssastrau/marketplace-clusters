@@ -1,0 +1,12 @@
+---
+-  name: restart firewalld
+   systemd:
+    name: firewalld
+    state: restarted
+    enabled: yes
+
+- name: restart nomad
+  systemd: 
+    name: nomad.service
+    state: restarted
+    enabled: yes

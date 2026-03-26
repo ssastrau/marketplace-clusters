@@ -1,0 +1,14 @@
+---
+# roles/post/tasks/main.yml
+
+- name: adding sudo user
+  import_tasks: sudouser.yml
+  when: cluster_mode == "client"
+
+- name: add user ssh keys
+  import_tasks: sshkeys.yml
+  when: cluster_mode == "client"
+
+- name: dumping credentials locally
+  import_tasks: creds.yml
+  when: cluster_mode == "client"
