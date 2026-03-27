@@ -172,11 +172,11 @@ jobs:
         env:
           LINODE_ID: ${{ steps.linode-provisioning.outputs.LINODE_ID }}
         run: bash .github/scripts/linode-deletion.sh
-      - name: Deleting Cluster for ${{ matrix.app }}
-        if: always()
-        run: bash .github/scripts/linode-cluster-deletion.sh
-      - name: Deleting domain records for ${{ matrix.app }}
-        if: always()
-        env:
-          LINODE_IPV4: ${{ steps.linode-provisioning.outputs.LINODE_IPV4 }}
-        run: bash .github/scripts/teardown-domain-records-cleanup.sh
+#      - name: Deleting Cluster for ${{ matrix.app }}
+#        if: always()
+#        run: bash .github/scripts/linode-cluster-deletion.sh
+#      - name: Deleting domain records for ${{ matrix.app }}
+#        if: always()
+#        env:
+#          LINODE_IPV4: ${{ steps.linode-provisioning.outputs.LINODE_IPV4 }}
+#        run: bash .github/scripts/teardown-domain-records-cleanup.sh
