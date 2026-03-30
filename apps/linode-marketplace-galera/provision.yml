@@ -5,6 +5,7 @@
   vars_files: [group_vars/galera/vars, group_vars/galera/secret_vars]
   vars:
     count: '{{ cluster_size }}'
+
   tasks:
     - name: Creating galera linodes
       linode.cloud.instance:
