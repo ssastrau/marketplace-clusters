@@ -82,12 +82,12 @@ jobs:
       fail-fast: false
       matrix:
         app: ${{ fromJson(needs.get-all-apps.outputs.configs) }}
-      max-parallel: 10
+      max-parallel: 5
     env:
       LINODE_API_SECRET: ${{ secrets.LINODE_API_SECRET }}
       LINODE_ROOT_PASS: ${{ secrets.LINODE_ROOT_PASS }}
-      LINODE_DOMAIN: ${{ vars.LINODE_DOMAIN }}
-      LINODE_SUBDOMAIN: ${{ vars.LINODE_SUBDOMAIN }}
+      LINODE_DOMAIN: ${{ secrets.LINODE_DOMAIN }}
+      LINODE_SUBDOMAIN: ${{ secrets.LINODE_SUBDOMAIN }}
       LINODE_PRIVATE_SSH_KEY: ${{ secrets.LINODE_PRIVATE_SSH_KEY }}
       LINODE_PUBLIC_SSH_KEY: ${{ secrets.LINODE_PUBLIC_SSH_KEY }}
     steps:
