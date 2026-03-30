@@ -1,19 +1,15 @@
+---
 # destroy galera linodes
-
-- name: destroy galera linodes
+- name: Destroy galera linodes
   hosts: localhost
   connection: local
-  vars_files:
-      - group_vars/galera/vars
-      - group_vars/galera/secret_vars
-  
+  vars_files: [group_vars/galera/vars, group_vars/galera/secret_vars]
   vars:
     count: '{{ cluster_size - 1 }}'
-
   tasks:
-  - name: deleting galera linodes
-    linode.cloud.instance:
-      label: 'galera-instance-{{ item | int + 1 }}'
-      api_token: '{{ token }}'
-      state: absent
-    with_sequence: count='{{ count }}'
+    - name: Deleting galera linodes
+      linode.cloud.instance:
+        label: 'galera-instance-{{ item | int + 1 }}'
+        api_token: '{{ token }}'
+        state: absent
+      with_sequence: count='{{ count }}'

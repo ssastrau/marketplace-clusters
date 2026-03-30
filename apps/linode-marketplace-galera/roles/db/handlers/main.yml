@@ -1,6 +1,6 @@
+---
 # roles/db/handlers/main.yml
-
-- name: firewalld restart
+- name: Firewalld restart
   systemd:
     name: firewalld
     state: restarted
