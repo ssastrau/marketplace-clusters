@@ -1,0 +1,98 @@
+---
+# roles/db/tasks/ssl.yml
+- name: create directory for ssl files
+  file:
+    path: /etc/ssl/mysql
+    state: directory
+    owner: mysql
+    group: mysql
+    mode: '0755'
+
+# generate ssl/tls certificates for galera cluster
+- name: generate ca passphrase
+  set_fact:
+    ca_password: "{{ lookup('password', '/dev/null length=25 chars=ascii_letters,digits,punctuation') }}"
+  run_once: true
+  delegate_to: "{{ groups['galera_servers'][0] }}"
+
+- name: generate ca key
+  community.crypto.openssl_privatekey_pipe:
+    passphrase: '{{ ca_password }}'
+    cipher: auto
+  register: ca_key
+  run_once: true
+  delegate_to: "{{ groups['galera_servers'][0] }}"
+
+- name: generate ca csr
+  community.crypto.openssl_csr_pipe:
+    privatekey_content: '{{ ca_key.privatekey }}'
+    privatekey_passphrase: '{{ ca_password }}'
+    country_name: '{{ country_name }}'
+    state_or_province_name: '{{ state_or_province_name }}'
+    locality_name: '{{ locality_name }}'
+    organization_name: '{{ organization_name }}'
+    email_address: '{{ email_address }}'
+    common_name: '{{ ca_common_name }}'
+    use_common_name_for_san: false
+    basic_constraints:
+      - 'CA:TRUE'
+    basic_constraints_critical: yes
+    key_usage:
+      - keyCertSign
+    key_usage_critical: true
+  register: ca_csr
+  run_once: true
+  delegate_to: "{{ groups['galera_servers'][0] }}"
+
+- name: generate ca crt
+  community.crypto.x509_certificate:
+    path: /etc/ssl/mysql/galera-ca-crt.pem
+    privatekey_content: '{{ ca_key.privatekey }}'
+    privatekey_passphrase: '{{ ca_password }}'
+    csr_content: '{{ ca_csr.csr }}'
+    selfsigned_not_after: +3650d
+    provider: selfsigned
+    owner: mysql
+    group: mysql
+    mode: '0660'
+
+- name: generate server key
+  community.crypto.openssl_privatekey:
+    path: /etc/ssl/mysql/galera-server-key.pem
+    owner: mysql
+    group: mysql
+    mode: '0660'
+
+- name: generate server csr
+  community.crypto.openssl_csr_pipe:
+    privatekey_path: /etc/ssl/mysql/galera-server-key.pem
+    country_name: '{{ country_name }}'
+    state_or_province_name: '{{ state_or_province_name }}'
+    locality_name: '{{ locality_name }}'
+    organization_name: '{{ organization_name }}'
+    email_address: '{{ email_address }}'
+    common_name: '{{ common_name }}'
+    use_common_name_for_san: false
+  register: server_csr
+
+- name: generate server cert signed with ca cert
+  community.crypto.x509_certificate:
+    path: /etc/ssl/mysql/galera-server-crt.pem
+    privatekey_path: /etc/ssl/mysql/galera-server-key.pem
+    csr_content: '{{ server_csr.csr }}'
+    ownca_path: /etc/ssl/mysql/galera-ca-crt.pem
+    ownca_privatekey_content: '{{ ca_key.privatekey }}'
+    ownca_privatekey_passphrase: '{{ ca_password }}'
+    ownca_not_after: +3650d
+    provider: ownca
+    owner: mysql
+    group: mysql
+    mode: '0660'
+
+- name: clear varibles
+  set_fact:
+    ca_csr: ''
+    ca_key: ''
+    server_csr: ''
+  run_once: true
+  delegate_to: "{{ groups['galera_servers'][0] }}"
