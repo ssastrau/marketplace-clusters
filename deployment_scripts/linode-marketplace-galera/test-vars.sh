@@ -17,6 +17,12 @@ fi
 
 declare -A UDF_VARS
 
+if [[ -n "${DISABLE_ROOT}" ]]; then
+        UDF_VARS["DISABLE_ROOT"]="${DISABLE_ROOT}"
+else
+        UDF_VARS["DISABLE_ROOT"]="No"
+fi
+
 if [[ -n "${CLUSTER_NAME}" ]]; then
         UDF_VARS["CLUSTER_NAME"]="${CLUSTER_NAME}"
 else
