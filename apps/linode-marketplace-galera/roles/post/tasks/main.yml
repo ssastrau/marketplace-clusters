@@ -1,10 +1,8 @@
 ---
 # roles/post/tasks/main.yml
-- name: Set root password on remote nodes
-  lineinfile:
-    path: /etc/shadow
-    regexp: '^root.+'
-    line: '{{ root_password }}'
+- name: Set root password
+  import_role:
+    name: setrootpwd
 
 - name: Set ssh facts
   set_fact:
