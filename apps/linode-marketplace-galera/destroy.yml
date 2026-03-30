@@ -8,12 +8,12 @@
       - group_vars/galera/secret_vars
   
   vars:
-    count: 2
+    count: '{{ cluster_size - 1 }}'
 
   tasks:
   - name: deleting galera linodes
     linode.cloud.instance:
-      label: '{{ galera_prefix }}{{ item | int + 1 }}'
+      label: 'galera-instance-{{ item | int + 1 }}'
       api_token: '{{ token }}'
       state: absent
     with_sequence: count='{{ count }}'
