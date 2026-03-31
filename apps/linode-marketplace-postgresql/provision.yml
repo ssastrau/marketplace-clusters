@@ -6,12 +6,12 @@
       - group_vars/postgresql/secret_vars
   
   vars:
-    count: 2
+    count: '{{ cluster_size - 1 }}'
        
   tasks:
   - name: creating postgresql cluster
     linode.cloud.instance:
-      label: '{{ instance_prefix }}{{ item | int + 1 }}'
+      label: 'postgresql-instance-{{ item | int + 1 }}-{{ uuid }}'
       api_token: '{{ token }}'
       type: '{{ type }}'
       region: '{{ region }}'
@@ -29,23 +29,23 @@
   - name: Get info about an instance by label
     linode.cloud.instance_info:
       api_token: '{{ token }}'
-      label: '{{ instance_prefix }}{{ item | int + 1 }}'
+      label: 'postgresql-instance-{{ item }}-{{ uuid }}'
     register: info
-    with_sequence: count='{{ count }}'
+    with_sequence: count='{{ cluster_size }}'
 
   - name: set facts
     set_fact:
-      pg1_hostname: '{{ instance_prefix }}1.{{ cluster_name }}'
-      pg2_hostname: '{{ info.results.0.instance.label }}.{{ cluster_name }}'
-      pg3_hostname: '{{ info.results.1.instance.label }}.{{ cluster_name }}'
+      pg1_hostname: '{{ info.results.0.instance.label }}.{{ cluster_name }}'
+      pg2_hostname: '{{ info.results.1.instance.label }}.{{ cluster_name }}'
+      pg3_hostname: '{{ info.results.2.instance.label }}.{{ cluster_name }}'
       # public ips
-      pg1_ip1: '{{ ansible_all_ipv4_addresses[0] }}'
-      pg2_ip1: '{{ info.results.0.instance.ipv4[0] }}'
-      pg3_ip1: '{{ info.results.1.instance.ipv4[0] }}'
+      pg1_ip1: '{{ info.results.0.instance.ipv4[0] }}'
+      pg2_ip1: '{{ info.results.1.instance.ipv4[0] }}'
+      pg3_ip1: '{{ info.results.2.instance.ipv4[0] }}'
       # private ips
-      pg1_priv1: '{{ ansible_all_ipv4_addresses[1] }}'
-      pg2_priv1: '{{ info.results.0.instance.ipv4[1] }}'
-      pg3_priv1: '{{ info.results.1.instance.ipv4[1] }}'
+      pg1_priv1: '{{ info.results.0.instance.ipv4[1] }}'
+      pg2_priv1: '{{ info.results.1.instance.ipv4[1] }}'
+      pg3_priv1: '{{ info.results.2.instance.ipv4[1] }}'
 
   - name: update group_vars
     blockinfile:
@@ -54,8 +54,8 @@
       block: |
         # hostnames 
         pg1_hostname: {{ pg1_hostname | replace('_', '-') }}
-        pg2_hostname: {{ pg2_hostname |replace('_', '-') }}
-        pg3_hostname: {{ pg3_hostname | replace('_', '-')}}
+        pg2_hostname: {{ pg2_hostname | replace('_', '-') }}
+        pg3_hostname: {{ pg3_hostname | replace('_', '-') }}
         # public ips
         pg1_ip1: {{ pg1_ip1 }}
         pg2_ip1: {{ pg2_ip1 }}
