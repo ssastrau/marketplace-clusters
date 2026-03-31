@@ -1,0 +1,28 @@
+---
+# group_vars/redis-sentinel/vars
+
+# Linode vars
+ssh_keys: 
+instance_prefix: 
+type: 
+region: 
+image: 
+linode_tags: 
+# sudo user
+sudo_username:  
+redis_version: 
+cluster_size: 
+# ssl/tls
+country_name:
+state_or_province_name:
+locality_name:
+organization_name:
+email_address:
+ca_common_name:
+common_name:
+# paths
+redis_cacert: '/etc/redis/tls/ca.crt'
+redis_cekey: '/etc/redis/tls/ca.key'
+redis_cert: '/etc/redis/tls/redis.crt'
+redis_key: '/etc/redis/tls/redis.key'
+redis_dh: '/etc/redis/tls/redis.dh'
