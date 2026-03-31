@@ -1,0 +1,174 @@
+---
+# roles/redis-sentinel/tasks/redis.yml
+
+# configure redis
+
+- name: create backup of redis configurations
+  copy: 
+    src: "{{ item.file }}" 
+    dest: "{{ item.backup }}"
+    remote_src: yes
+    owner: redis
+    group: redis
+    mode: '0644'
+  loop:
+    - { file: '/etc/redis/redis.conf', backup: '/etc/redis/redis.conf.bak' }
+    - { file: '/etc/redis/sentinel.conf', backup: '/etc/redis/sentinel.conf.bak' }
+
+# configure redis replication
+
+- name: removing redis default values
+  replace:
+    path: /etc/redis/redis.conf
+    regexp: "{{ item.search }}"
+    replace: "{{ item.replace }}"
+  loop:
+    - { search: '^(port)', replace: '# \1' }
+    - { search: '^(bind)', replace: '# \1' }
+    - { search: '^(masterauth)', replace: '# \1' }
+    - { search: '^(protected-mode)', replace: '# \1' }
+    - { search: '^(requirepass)', replace: '# \1' }
+    - { search: '^(replicaof)', replace: '# \1' }
+
+- name: updating redis config on primary
+  blockinfile:
+    path: /etc/redis/redis.conf
+    marker: "# {mark} LINODE OCC"
+    block: |
+      # TLS/SSL
+      port 0
+      tls-port 6379
+      tls-cert-file {{ redis_cert }}
+      tls-key-file {{ redis_key }}
+      tls-dh-params-file {{ redis_dh }}
+      tls-ca-cert-file {{ redis_cacert }}
+      tls-auth-clients optional
+      tls-replication yes
+      tls-cluster yes
+      # general
+      bind 127.0.0.1 ::1 {{ redis_data.results[0].instance.ip_priv1 }}
+      masterauth {{ redis_password }}
+      protected-mode no
+      requirepass {{ redis_password }}
+  run_once: true
+  delegate_to: "{{ groups['redis_primary'][0] }}"
+
+- name: starting redis-server on primary
+  systemd:
+    name: redis-server
+    state: started
+  run_once: true
+  delegate_to: "{{ groups['redis_primary'][0] }}"
+
+- name: checking primary PING response
+  shell: redis-cli -a "{{ redis_password }}" --tls --cacert "{{ redis_cacert }}" ping
+  register: primary_check
+  changed_when: "primary_check.stdout != 'PONG'"
+  failed_when: "primary_check.stdout != 'PONG'"
+  no_log: true
+  run_once: true
+  delegate_to: "{{ groups['redis_primary'][0] }}"
+
+# configure sencondaries
+
+- name: updating redis config on sencondaries
+  blockinfile:
+    path: /etc/redis/redis.conf
+    marker: "# {mark} LINODE OCC"
+    block: |
+      # TLS/SSL
+      port 0
+      tls-port 6379
+      tls-cert-file {{ redis_cert }}
+      tls-key-file {{ redis_key }}
+      tls-dh-params-file {{ redis_dh }}
+      tls-ca-cert-file {{ redis_cacert }}
+      tls-auth-clients optional
+      tls-replication yes
+      tls-cluster yes
+      # general    
+      bind 127.0.0.1 ::1 {{ redis_data.results[count + 1].instance.ip_priv1 }}
+      masterauth {{ redis_password }}
+      protected-mode no
+      requirepass {{ redis_password }}
+      replicaof {{ redis_data.results[0].instance.ip_priv1 }} 6379
+  run_once: true
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['redis_secondary'] }}"
+  loop_control:
+    index_var: count
+
+- name: starting redis-server on secondaries
+  systemd:
+    name: redis-server
+    state: started
+  run_once: true
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['redis_secondary'] }}"
+
+# validation
+
+- name: getting redis info
+  shell: redis-cli --no-auth-warning -a "{{ redis_password }}" --tls --cacert "{{ redis_cacert }}" info replication | grep 'connected_slaves' |  awk -F ':' {'print $2'}
+  register: redisinfo
+  until: redisinfo is not failed
+  retries: 10
+  delay: 3
+  changed_when: "(redisinfo.stdout | int ) != (cluster_size - 1)"
+  failed_when: "(redisinfo.stdout | int ) != (cluster_size - 1)"
+  no_log: true
+  run_once: true
+  delegate_to: "{{ groups['redis_primary'][0] }}"
+
+- name: inserting data into redis
+  community.general.redis_data:
+    login_host: localhost
+    login_password: "{{ redis_password }}"
+    key: replication
+    value: success
+    tls: true
+    ca_certs: "{{ redis_cacert }}"
+    state: present
+  run_once: true
+  delegate_to: "{{ groups['redis_primary'][0] }}"
+
+# add delay for replication events to occur
+
+- name: getting value of key
+  community.general.redis_data_info:
+    login_host: localhost
+    login_password: "{{ redis_password }}"
+    key: replication
+    tls: true
+    ca_certs: "{{ redis_cacert }}"
+  register: rediskey
+  until: rediskey is not failed
+  retries: 3
+  delay: 3
+  changed_when: "rediskey.value != 'success'"
+  failed_when: "rediskey.value != 'success'"
+  run_once: true
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['redis_secondary'] }}"
+
+# asserting might not be neccessary. If the above fails, this will never pass.
+
+- name: ensuring key is present on the secondaries
+  assert:
+    that: "{{ rediskey.results[0].value == 'success' }}"
+  run_once: true
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['redis_secondary'] }}"
+
+# clean up
+
+- name: cleaning up and removing test key
+  community.general.redis_data:
+    login_host: localhost
+    login_password: "{{ redis_password }}"
+    key: replication
+    tls: true
+    ca_certs: "{{ redis_cacert }}"
+    state: absent
+  run_once: true
+  delegate_to: "{{ groups['redis_primary'][0] }}"

@@ -1,0 +1,21 @@
+---
+# roles/post/tasks/creds.yml
+
+- name: writing deployment credentils locally
+  blockinfile:
+    path: "/home/{{ sudo_username }}/.deployment-secrets.txt"
+    create: yes
+    owner: "{{ sudo_username }}"
+    group: "{{ sudo_username }}"
+    mode: 0644    
+    block: |
+      # system user 
+      
+      user: {{ sudo_username }}
+      password: {{ sudo_username_pass }}
+
+      # redis password
+      redis-cli --askpass --tls --cacert /etc/redis/tls/ca.crt:
+      {{ redis_password }}
+  run_once: true
+  delegate_to: "{{ groups['redis_primary'][0] }}"

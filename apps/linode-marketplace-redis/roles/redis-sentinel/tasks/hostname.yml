@@ -1,0 +1,23 @@
+---
+# roles/redis-sentinel/tasks/hostname.yml
+
+- name: configure hostnames
+  hostname:
+    use: systemd
+    name: "{{ redis_data.results[count].instance.hostname }}"
+  run_once: true
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['all'] }}"
+  loop_control:
+    index_var: count
+
+- name: update /etc/hosts on all of the nodes
+  blockinfile:
+    path: /etc/hosts
+    marker: "# {mark} redis servers"
+    block: |
+      #jinja2: trim_blocks:False
+      # Redis
+      {%- for count in range(cluster_size) %}
+      {{ redis_data.results[count].instance.ip_priv1 }} {{ redis_data.results[count].instance.hostname }}
+      {%- endfor %}

@@ -1,0 +1,14 @@
+---
+# roles/redis-sentinel/tasks/firewalld.yml
+
+- name: installing firewalld
+  apt:
+    name: firewalld
+    state: present
+
+- name: updating firewalld.conf file
+  lineinfile:
+    path: /etc/firewalld/firewalld.conf
+    regexp: '^IndividualCalls=no'
+    line: IndividualCalls=yes
+  notify: restart firewalld
