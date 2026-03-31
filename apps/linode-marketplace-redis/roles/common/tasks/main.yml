@@ -1,14 +1,7 @@
 ---
-# roles/common/tasks
-
-# common tasks for all linodes
-- name: Apt update
-  apt:
-    update_cache: true
-
-- name: Apt upgrade
-  apt:
-    upgrade: full
+- name: Update system packages
+  import_role:
+    name: update_pkgs
 
 - name: Install basic packages
   apt:
@@ -22,13 +15,11 @@
       - python3-passlib
     state: present
 
-- name: Secure ssh configs
-  lineinfile:
-    path: /etc/ssh/sshd_config
-    regexp: '{{ item.search }}'
-    line: '{{ item.replace }}'
-  loop:
-    - { search: '^\#?PermitRootLogin (yes|no)', replace: 'PermitRootLogin without-password' }
-    - { search: '^\#?PasswordAuthentication (yes|no)', replace: 'PasswordAuthentication no' }
-    - { search: '^\#?PubkeyAuthentication (yes|no)', replace: 'PubkeyAuthentication yes' }
-  notify: Restart ssh
+- name: Secure ssh
+  import_role:
+    name: securessh
+  when: disable_root is defined
+
+- name: Enabling fail2ban
+  import_role:
+    name: fail2ban_install

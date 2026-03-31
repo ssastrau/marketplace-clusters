@@ -1,7 +1,0 @@
----
-# roles/common/handlers
-- name: Restart ssh
-  systemd:
-    name: ssh
-    state: restarted
-    enabled: true
