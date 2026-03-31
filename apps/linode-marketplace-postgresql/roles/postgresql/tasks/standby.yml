@@ -1,0 +1,65 @@
+---
+- name: wait for pg1
+  wait_for:
+    port: 5432
+    host: "{{ pg1_priv1 }}"
+
+#pg2 
+
+- name: shutting down postgresql in pg2
+  systemd:
+    name: postgresql
+    state: stopped
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][1] }}"    
+
+- name: pg2 now being cloned from pg1
+  shell: repmgr -h {{ pg1_priv1 }} -U repmgr -d repmgr -Ff /etc/repmgrd/repmgr.conf standby clone
+  become_user: postgres
+  become: true
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][1] }}"
+
+- name: starting postgresql in pg2
+  systemd:
+    name: postgresql
+    state: started
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][1] }}"  
+
+- name: pg2 being registered as standby
+  shell: repmgr -Ff /etc/repmgrd/repmgr.conf standby register
+  become_user: postgres
+  become: true
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][1] }}"
+
+  #pg3
+
+- name: shutting down postgresql in pg3
+  systemd:
+    name: postgresql
+    state: stopped
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][2] }}"    
+
+- name: pg3 now being cloned from pg1
+  shell: repmgr -h {{ pg1_priv1 }} -U repmgr -d repmgr -Ff /etc/repmgrd/repmgr.conf standby clone
+  become_user: postgres
+  become: true
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][2] }}"
+
+- name: starting postgresql in pg3
+  systemd:
+    name: postgresql
+    state: started
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][2] }}"  
+
+- name: pg3 being registered as standby
+  shell: repmgr -Ff /etc/repmgrd/repmgr.conf standby register
+  become_user: postgres
+  become: true
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][2] }}"

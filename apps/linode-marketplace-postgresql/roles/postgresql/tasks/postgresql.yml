@@ -1,0 +1,131 @@
+---
+- name: creating pg_hba.conf backup
+  copy: 
+    src: /etc/postgresql/14/main/pg_hba.conf 
+    dest: /etc/postgresql/14/main/pg_hba.conf.bak
+    remote_src: yes
+    owner: postgres
+    group: postgres
+    mode: '0644'
+
+- name: creating postgresql.conf backup
+  copy: 
+    src: /etc/postgresql/14/main/postgresql.conf 
+    dest: /etc/postgresql/14/main/postgresql.conf.bak
+    remote_src: yes
+    owner: postgres
+    group: postgres    
+    mode: '0644'
+
+#pg1
+
+- name: set fact pg1 for pg_hba.conf update
+  set_fact:
+    primary_node: "{{ pg1_priv1 }}"
+    secondary_node2: "{{ pg2_priv1 }}"
+    secondary_node3: "{{ pg3_priv1 }}"
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][0] }}"
+
+- name: updating pg1 pg_hba.conf file 
+  template:
+    src: pg_hba.conf.j2 
+    dest: "/etc/postgresql/14/main/pg_hba.conf"
+    owner: postgres
+    group: postgres
+    mode: '0644'      
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][0] }}"
+
+- name: updating pg1 postgresql.conf file 
+  template:
+    src: postgresql.conf.j2 
+    dest: "/etc/postgresql/14/main/postgresql.conf"
+    owner: postgres
+    group: postgres
+    mode: '0644'      
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][0] }}"
+     
+# pg2
+
+- name: set fact pg2 for pg_hba.conf update
+  set_fact:
+    primary_node: "{{ pg2_priv1 }}"
+    secondary_node2: "{{ pg1_priv1 }}"
+    secondary_node3: "{{ pg3_priv1 }}"
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][1] }}"
+
+- name: updating pg2 pg_hba.conf file
+  template:
+    src: pg_hba.conf.j2
+    dest: "/etc/postgresql/14/main/pg_hba.conf"
+    owner: postgres
+    group: postgres    
+    mode: '0644'
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][1] }}"
+
+- name: updating pg2 postgresql.conf file 
+  template:
+    src: postgresql.conf.j2 
+    dest: "/etc/postgresql/14/main/postgresql.conf"
+    owner: postgres
+    group: postgres    
+    mode: '0644'
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][1] }}"
+
+# pg3
+
+- name: set fact pg3 for pg_hba.conf update
+  set_fact:
+    primary_node: "{{ pg3_priv1 }}"
+    secondary_node2: "{{ pg1_priv1 }}"
+    secondary_node3: "{{ pg2_priv1 }}"
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][2] }}"
+
+- name: updating pg3 pg_hba.conf file
+  template:
+    src: pg_hba.conf.j2
+    dest: "/etc/postgresql/14/main/pg_hba.conf"
+    owner: postgres
+    group: postgres    
+    mode: '0644'
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][2] }}"
+
+- name: updating pg3 postgresql.conf file 
+  template:
+    src: postgresql.conf.j2 
+    dest: "/etc/postgresql/14/main/postgresql.conf"
+    owner: postgres
+    group: postgres    
+    mode: '0644'
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][2] }}"
+
+- name: restarting postgresql
+  systemd:
+    name: postgresql
+    state: restarted
+
+- name: adding postgres to sudoers file
+  blockinfile:
+    path: /etc/sudoers
+    marker: "# {mark} Allow the postgres user the ability to restart"
+    owner: root
+    group: root
+    mode: '1440'
+    block: |
+      postgres ALL=(ALL:ALL) NOPASSWD: /usr/bin/systemctl start postgresql, \
+          /usr/bin/systemctl stop postgresql, \
+          /usr/bin/systemctl restart postgresql, \
+          /usr/bin/systemctl status postgresql, \          
+          /usr/bin/systemctl reload postgresql, \
+          /usr/bin/systemctl start repmgrd, \
+          /usr/bin/systemctl status repmgrd, \
+          /usr/bin/systemctl stop repmgrd, \
+          /usr/bin/systemctl restart repmgrd    

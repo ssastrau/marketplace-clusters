@@ -1,0 +1,136 @@
+---
+
+- name: setting postgresql home directory
+  set_fact:
+    pg_home: "/var/lib/postgresql"
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][0] }}"
+
+- name: create ssh directory for postgres
+  file:
+    path: "{{ pg_home }}/.ssh"
+    mode: 0700
+    owner: postgres
+    group: postgres
+    state: directory 
+
+#keygen
+#pg1
+
+- name: create ssh key pair on postgresql1
+  openssh_keypair:
+    path: "{{ pg_home }}/.ssh/id_rsa"
+    size: 4096
+    type: rsa
+    owner: postgres
+    group: postgres
+    mode: 0600
+    comment: "postgres@{{ pg1_hostname }}"
+    state: present
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][0] }}"
+
+#pg2
+
+- name: create ssh key pair on postgresql2
+  openssh_keypair:
+    path: "{{ pg_home }}/.ssh/id_rsa"
+    size: 4096
+    type: rsa
+    owner: postgres
+    group: postgres
+    mode: 0600
+    comment: "postgres@{{ pg2_hostname }}"
+    state: present
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][1] }}"
+
+#pg3
+
+- name: create ssh key pair on postgresql3
+  openssh_keypair:
+    path: "{{ pg_home }}/.ssh/id_rsa"
+    size: 4096
+    type: rsa
+    owner: postgres
+    group: postgres
+    mode: 0600
+    comment: "postgres@{{ pg3_hostname }}"
+    state: present
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][2] }}"
+
+- name: wait until pubkey is created
+  wait_for:
+    path: "{{ pg_home }}/.ssh/id_rsa.pub"
+
+#get pubkey
+#pg1
+
+- name: grab pubkey from postgresql1 
+  slurp:
+    src: "{{ pg_home }}/.ssh/id_rsa.pub"
+  register: postgresql1_pubkey  
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][0] }}"
+
+#pg2
+
+- name: grab pubkey from postgresql2
+  slurp:
+    src: "{{ pg_home }}/.ssh/id_rsa.pub"
+  register: postgresql2_pubkey 
+  run_once: true 
+  delegate_to: "{{ groups['postgresql'][1] }}"
+
+#pg3   
+
+- name: grab pubkey from postgresql3
+  slurp:
+    src: "{{ pg_home }}/.ssh/id_rsa.pub"
+  register: postgresql3_pubkey 
+  run_once: true 
+  delegate_to: "{{ groups['postgresql'][2] }}"
+
+# add pubkeys to each server
+- name: adding pubkeys to postgresql1
+  blockinfile:
+    path: "{{ pg_home  }}/.ssh/authorized_keys"
+    create: yes
+    marker: ""
+    owner: postgres
+    group: postgres
+    mode: 0600
+    block: |
+      {{ postgresql2_pubkey.content | b64decode }}
+      {{ postgresql3_pubkey.content | b64decode }}
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][0] }}"  
+
+- name: adding pubkeys to postgresql2
+  blockinfile:
+    path: "{{ pg_home  }}/.ssh/authorized_keys"
+    create: yes
+    marker: ""
+    owner: postgres
+    group: postgres
+    mode: 0600
+    block: |  
+      {{ postgresql1_pubkey.content | b64decode }}
+      {{ postgresql3_pubkey.content | b64decode }}
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][1] }}"
+
+- name: adding pubkeys to postgresql3
+  blockinfile:
+    path: "{{ pg_home  }}/.ssh/authorized_keys"
+    create: yes
+    marker: ""
+    owner: postgres
+    group: postgres
+    mode: 0600
+    block: |
+      {{ postgresql1_pubkey.content | b64decode }}
+      {{ postgresql2_pubkey.content | b64decode }}
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][2] }}"

@@ -1,0 +1,7 @@
+---
+- name: registering pg1 as primary
+  shell: repmgr -Ff /etc/repmgrd/repmgr.conf primary register
+  become_user: postgres
+  become: true
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][0] }}"

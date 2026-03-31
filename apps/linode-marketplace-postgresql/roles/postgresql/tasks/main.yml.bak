@@ -1,0 +1,374 @@
+---
+# roles/postgresql_cluster/tasks
+# general tasks
+
+- name: set pg1 hostname
+  hostname:
+    name: "pg1.{{ instance_fqdn }}"
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][0] }}"
+
+- name: set pg2 hostname
+  hostname:
+    name: "pg2.{{ instance_fqdn }}"
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][1] }}"
+
+- name: update /etc/hosts
+  blockinfile:
+    path: /etc/hosts
+    marker: "# {mark} Postgresql servers"
+    block: |
+      {{ pg1_priv1 }} pg1.{{ instance_fqdn }} pg1
+      {{ pg2_priv1 }} pg2.{{ instance_fqdn }} pg2
+
+# <firewalld>
+- name: installing firewalld
+  apt:
+    name: firewalld
+    state: present
+
+- name: updating firewalld.conf file
+  lineinfile:
+    path: /etc/firewalld/firewalld.conf
+    regexp: '^IndividualCalls=no'
+    line: IndividualCalls=yes
+
+- name: restarting firewalld on servers
+  service:
+    name: firewalld
+    state: restarted
+
+- name: set fact for firewalld for pg1
+  set_fact:
+    firewalld_comment: "pg2.{{ instance_fqdn }}"
+    secondary_node: "{{ pg2_priv1 }}"
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][0] }}"
+
+- name: installing internal.xml for pg1
+  template:
+    src: internal.xml.j2
+    dest: /etc/firewalld/zones/internal.xml
+  run_once: true  
+  delegate_to: "{{ groups['postgresql'][0] }}"
+
+- name: reloading firewalld on pg1
+  shell: firewall-cmd --reload
+  run_once: true  
+  delegate_to: "{{ groups['postgresql'][0] }}"
+
+- name: set facts for firewalld for pg2
+  set_fact:
+    firewalld_comment: "pg1.{{ instance_fqdn }}"
+    secondary_node: "{{ pg1_priv1 }}"
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][1] }}"  
+
+- name: installing internal.xml for pg2
+  template:
+    src: internal.xml.j2
+    dest: /etc/firewalld/zones/internal.xml
+  run_once: true  
+  delegate_to: "{{ groups['postgresql'][1] }}"
+
+- name: reloading firewalld on pg2
+  shell: firewall-cmd --reload
+  run_once: true  
+  delegate_to: "{{ groups['postgresql'][1] }}"  
+
+#</firewall>
+
+#<postgres>
+- name: adding postgresql repository
+  shell: echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list
+
+- name: importing signing key for repo
+  apt_key:
+    url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+    state: present
+
+- name: updating repos
+  apt:
+    update_cache: yes
+
+- name: Installing postgresql-14 and repmgrd packages
+  apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - postgresql-14 
+    - postgresql-14-repmgr  
+
+#</postgres>      
+
+#<keypair gen>
+- name: Generating public key for postgres
+  shell: ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa -N ""
+  become_user: postgres
+  become_method: su
+  become_flags: '-'
+  become: true
+
+- name: getting public key for pg1
+  shell: cat ~/.ssh/id_rsa.pub
+  become_user: postgres
+  become_method: su
+  become_flags: '-'
+  become: true
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][0] }}"
+  register: pg1_pubkey
+
+- name: getting public key for pg2
+  shell: cat ~/.ssh/id_rsa.pub
+  become_user: postgres
+  become_method: su
+  become_flags: '-'
+  become: true
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][1] }}"
+  register: pg2_pubkey
+
+- name: adding pg2 pubkey to pg1 authorized_keys
+  copy:
+    content: "{{ pg2_pubkey.stdout }}"
+    remote_src: yes
+    dest: ~/.ssh/authorized_keys
+    mode: 0700
+  become_user: postgres
+  become_method: su
+  become_flags: '-'
+  become: true
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][0] }}"
+
+- name: adding pg1 pubkey to pg2 authorized_keys
+  copy:
+    content: "{{ pg1_pubkey.stdout }}"
+    remote_src: yes
+    dest: ~/.ssh/authorized_keys
+    mode: 0700
+  become_user: postgres
+  become_method: su
+  become_flags: '-'
+  become: true
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][1] }}"
+
+#<
+- name: creating repmgrd in database
+  postgresql_user:
+    name: repmgr
+    password: "{{ repmgrd_passwd }}"
+    conn_limit: -1
+    role_attr_flags: SUPERUSER
+  become_user: postgres
+  become_method: su
+  become_flags: '-'
+  become: true
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][0] }}"
+
+- name: creating repmgr database for repmgr user
+  postgresql_db:
+    name: repmgr
+    owner: repmgr
+    state: present
+  become_user: postgres
+  become_method: su
+  become_flags: '-'
+  become: true
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][0] }}"
+
+# backup/update hba and postgresql.conf
+- name: creating pg_hba.conf backup
+  copy: 
+    src: /etc/postgresql/14/main/pg_hba.conf 
+    dest: /etc/postgresql/14/main/pg_hba.conf.bak
+    remote_src: yes
+    owner: postgres
+    group: postgres
+
+- name: creating postgresql.conf backup
+  copy: 
+    src: /etc/postgresql/14/main/postgresql.conf 
+    dest: /etc/postgresql/14/main/postgresql.bak
+    remote_src: yes
+    owner: postgres
+    group: postgres    
+
+- name: set fact pg1 for pg_hba.conf update
+  set_fact:
+    primary_node: "{{ pg1_priv1 }}"
+    secondary_node: "{{ pg2_priv1 }}"
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][0] }}"
+
+- name: updating pg1 pg_hba.conf file 
+  template:
+    src: pg_hba.conf.j2 
+    dest: "/etc/postgresql/14/main/pg_hba.conf"
+    owner: postgres
+    group: postgres    
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][0] }}"
+
+- name: updating pg1 postgresql.conf file 
+  template:
+    src: postgresql.conf.j2 
+    dest: "/etc/postgresql/14/main/postgresql.conf"
+    owner: postgres
+    group: postgres    
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][0] }}"
+     
+- name: restarting postgresql in pg1
+  service:
+    name: postgresql
+    state: restarted
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][0] }}"  
+
+- name: set fact pg2 for pg_hba.conf update
+  set_fact:
+    primary_node: "{{ pg2_priv1 }}"
+    secondary_node: "{{ pg1_priv1 }}"
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][1] }}"
+
+- name: updating pg2 pg_hba.conf file
+  template:
+    src: pg_hba.conf.j2
+    dest: "/etc/postgresql/14/main/pg_hba.conf"
+    owner: postgres
+    group: postgres    
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][1] }}"
+
+- name: updating pg2 postgresql.conf file 
+  template:
+    src: postgresql.conf.j2 
+    dest: "/etc/postgresql/14/main/postgresql.conf"
+    owner: postgres
+    group: postgres    
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][1] }}"
+
+- name: restarting postgresql in pg2
+  service:
+    name: postgresql
+    state: restarted
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][1] }}"   
+
+- name: adding postgres to sudoers file
+  blockinfile:
+    path: /etc/sudoers
+    marker: "# {mark} Allow the postgres user the ability to restart"
+    block: |
+      postgres ALL=(ALL:ALL) NOPASSWD: /usr/bin/systemctl start postgresql, \
+          /usr/bin/systemctl stop postgresql, \
+          /usr/bin/systemctl restart postgresql, \
+          /usr/bin/systemctl reload postgresql, \
+          /usr/bin/systemctl start repmgrd, \
+          /usr/bin/systemctl stop repmgrd, \
+          /usr/bin/systemctl restart repmgrd
+
+# Repmgrd stuff
+- name: creating config and log directory for repmgrd
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: postgres
+    group: postgres
+  loop:
+    - /etc/repmgrd
+    - /var/log/repmgr
+
+- name: set facts pg1 for repmgr update
+  set_fact:
+    node_id: '1'
+    node_name: "pg1.{{ instance_fqdn }}"
+    conninfo_host: "pg1.{{ instance_fqdn }}"
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][0] }}"
+
+- name: placing repmgr.conf file in pg1
+  template:
+    src: repmgr.conf.j2
+    dest: /etc/repmgrd/repmgr.conf
+  run_once: true  
+  delegate_to: "{{ groups['postgresql'][0] }}"
+
+- name: set facts pg2 for repmgr update
+  set_fact:
+    node_id: '2'
+    node_name: "pg2.{{ instance_fqdn }}"
+    conninfo_host: "pg2.{{ instance_fqdn }}"
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][1] }}"
+
+- name: placing our repmgr.conf in pg2
+  template:
+    src: repmgr.conf.j2
+    dest: /etc/repmgrd/repmgr.conf
+  run_once: true  
+  delegate_to: "{{ groups['postgresql'][1] }}"
+
+- name: registering pg1 as primary
+  shell: repmgr -Ff /etc/repmgrd/repmgr.conf primary register
+  become_user: postgres
+  become_method: su
+  become_flags: '-'
+  become: true
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][0] }}"
+
+- name: shutting down postgresql in pg2
+  service:
+    name: postgresql
+    state: stopped
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][1] }}"    
+
+- name: pg2 now being cloned from pg1
+  shell: repmgr -h {{ pg1_priv1 }} -U repmgr -d repmgr -Ff /etc/repmgrd/repmgr.conf standby clone
+  become_user: postgres
+  become_method: su
+  become_flags: '-'
+  become: true
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][1] }}"
+
+- name: starting postgresql in pg2
+  service:
+    name: postgresql
+    state: started
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][1] }}"  
+
+- name: pg2 being registered as standby
+  shell: repmgr -Ff /etc/repmgrd/repmgr.conf standby register
+  become_user: postgres
+  become_method: su
+  become_flags: '-'
+  become: true
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][1] }}"
+
+- name: updating repmgrd config
+  lineinfile:
+    path: /etc/default/repmgrd
+    regexp: "{{ item.search }}"
+    line: "{{ item.replace }}"
+  loop:
+    - {search: '^REPMGRD_ENABLED=no', replace: 'REPMGRD_ENABLED=yes'}
+    - {search: '^#REPMGRD_CONF="/path/to/repmgr.conf"', replace: 'REPMGRD_CONF="/etc/repmgrd/repmgr.conf"'}
+    - {search: '^#REPMGRD_USER=postgres', replace: 'REPMGRD_USER=postgres'}
+
+- name: restarting repmgrd service
+  service:
+    name: repmgrd
+    state: restarted

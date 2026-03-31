@@ -1,0 +1,71 @@
+---
+- name: creating config and log directory for repmgrd
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: postgres
+    group: postgres
+    mode: '0755'
+  loop:
+    - /etc/repmgrd
+    - /var/log/repmgr
+
+#pg1
+
+- name: set facts pg1 for repmgr update
+  set_fact:
+    node_id: '1'
+    node_name: "{{ pg1_hostname }}"
+    conninfo_host: "{{ pg1_hostname }}"
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][0] }}"
+
+- name: placing repmgr.conf file in pg1
+  template:
+    src: repmgr.conf.j2
+    dest: /etc/repmgrd/repmgr.conf
+    owner: postgres
+    group: postgres
+    mode: '0644'
+  run_once: true  
+  delegate_to: "{{ groups['postgresql'][0] }}"
+
+# pg2
+
+- name: set facts pg2 for repmgr update
+  set_fact:
+    node_id: '2'
+    node_name: "{{ pg2_hostname }}"
+    conninfo_host: "{{ pg2_hostname }}"
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][1] }}"
+
+- name: placing our repmgr.conf in pg2
+  template:
+    src: repmgr.conf.j2
+    dest: /etc/repmgrd/repmgr.conf
+    owner: postgres
+    group: postgres
+    mode: '0644'      
+  run_once: true  
+  delegate_to: "{{ groups['postgresql'][1] }}"
+
+#pg3
+
+- name: set facts pg3 for repmgr update
+  set_fact:
+    node_id: '3'
+    node_name: "{{ pg3_hostname }}"
+    conninfo_host: "{{ pg3_hostname }}"
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][2] }}"
+
+- name: placing our repmgr.conf in pg3
+  template:
+    src: repmgr.conf.j2
+    dest: /etc/repmgrd/repmgr.conf
+    owner: postgres
+    group: postgres
+    mode: '0644'      
+  run_once: true  
+  delegate_to: "{{ groups['postgresql'][2] }}"

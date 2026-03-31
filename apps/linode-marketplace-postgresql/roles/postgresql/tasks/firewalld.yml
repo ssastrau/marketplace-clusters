@@ -1,0 +1,78 @@
+---
+- name: installing firewalld
+  apt:
+    name: firewalld
+    state: present
+
+- name: updating firewalld.conf file
+  lineinfile:
+    path: /etc/firewalld/firewalld.conf
+    regexp: '^IndividualCalls=no'
+    line: IndividualCalls=yes
+
+- name: set fact for firewalld for pg1
+  set_fact:
+    firewalld_comment_node1: "{{ pg2_hostname }}"
+    firewalld_comment_node2: "{{ pg3_hostname }}"
+    secondary_node1: "{{ pg2_priv1 }}"
+    secondary_node2: "{{ pg3_priv1 }}"
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][0] }}"
+
+- name: installing internal.xml for pg1
+  template:
+    src: internal.xml.j2
+    dest: /etc/firewalld/zones/internal.xml
+    owner: root
+    group: root
+    mode: '0644'
+  run_once: true  
+  delegate_to: "{{ groups['postgresql'][0] }}"
+
+# pg2
+
+- name: set facts for firewalld for pg2
+  set_fact:
+    firewalld_comment_node1: "{{ pg1_hostname }}"
+    firewalld_comment_node2: "{{ pg3_hostname }}"
+    secondary_node1: "{{ pg1_priv1 }}"
+    secondary_node2: "{{ pg3_priv1 }}"
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][1] }}"  
+
+- name: installing internal.xml for pg2
+  template:
+    src: internal.xml.j2
+    dest: /etc/firewalld/zones/internal.xml
+    owner: root
+    group: root
+    mode: '0644'
+  run_once: true  
+  delegate_to: "{{ groups['postgresql'][1] }}"
+
+# pg3
+
+- name: set facts for firewalld for pg3
+  set_fact:
+    firewalld_comment_node1: "{{ pg1_hostname }}"
+    firewalld_comment_node2: "{{ pg2_hostname }}"
+    secondary_node1: "{{ pg1_priv1 }}"
+    secondary_node2: "{{ pg2_priv1 }}"
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][2] }}"  
+
+- name: installing internal.xml for pg2
+  template:
+    src: internal.xml.j2
+    dest: /etc/firewalld/zones/internal.xml
+    owner: root
+    group: root
+    mode: '0644'
+  run_once: true  
+  delegate_to: "{{ groups['postgresql'][2] }}"
+
+- name: restarting firewalld on servers
+  #service:
+  systemd:
+    name: firewalld
+    state: restarted
