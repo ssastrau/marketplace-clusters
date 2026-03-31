@@ -1,0 +1,13 @@
+---
+# group_vars/postgresql/vars
+
+# Linode vars
+ssh_keys:
+instance_prefix:
+cluster_name:
+type:
+region:
+image:
+linode_tags:
+# sudo user
+sudo_username:

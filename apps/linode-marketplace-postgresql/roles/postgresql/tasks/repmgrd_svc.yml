@@ -1,0 +1,15 @@
+---
+- name: updating repmgrd config
+  lineinfile:
+    path: /etc/default/repmgrd
+    regexp: "{{ item.search }}"
+    line: "{{ item.replace }}"
+  loop:
+    - {search: '^REPMGRD_ENABLED=no', replace: 'REPMGRD_ENABLED=yes'}
+    - {search: '^#REPMGRD_CONF="/path/to/repmgr.conf"', replace: 'REPMGRD_CONF="/etc/repmgrd/repmgr.conf"'}
+    - {search: '^#REPMGRD_USER=postgres', replace: 'REPMGRD_USER=postgres'}
+
+- name: restarting repmgrd service
+  systemd:
+    name: repmgrd
+    state: restarted

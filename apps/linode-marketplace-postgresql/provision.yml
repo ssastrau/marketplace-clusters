@@ -1,0 +1,92 @@
+- name: Configuring environment
+  hosts: localhost
+  connection: local
+  vars_files:
+      - group_vars/postgresql/vars
+      - group_vars/postgresql/secret_vars
+  
+  vars:
+    count: 2
+       
+  tasks:
+  - name: creating postgresql cluster
+    linode.cloud.instance:
+      label: '{{ instance_prefix }}{{ item | int + 1 }}'
+      api_token: '{{ token }}'
+      type: '{{ type }}'
+      region: '{{ region }}'
+      image: '{{ image }}'
+      root_pass: '{{ root_pass }}'
+      authorized_keys: '{{ ssh_keys }}'
+      private_ip: true
+      stackscript_id: 1146322
+      ua_prefix: 'marketplace-postgresql-occ'
+      tags: '{{ linode_tags }}'
+      state: present
+    register: linode
+    with_sequence: count='{{ count }}'
+
+  - name: Get info about an instance by label
+    linode.cloud.instance_info:
+      api_token: '{{ token }}'
+      label: '{{ instance_prefix }}{{ item | int + 1 }}'
+    register: info
+    with_sequence: count='{{ count }}'
+
+  - name: set facts
+    set_fact:
+      pg1_hostname: '{{ instance_prefix }}1.{{ cluster_name }}'
+      pg2_hostname: '{{ info.results.0.instance.label }}.{{ cluster_name }}'
+      pg3_hostname: '{{ info.results.1.instance.label }}.{{ cluster_name }}'
+      # public ips
+      pg1_ip1: '{{ ansible_all_ipv4_addresses[0] }}'
+      pg2_ip1: '{{ info.results.0.instance.ipv4[0] }}'
+      pg3_ip1: '{{ info.results.1.instance.ipv4[0] }}'
+      # private ips
+      pg1_priv1: '{{ ansible_all_ipv4_addresses[1] }}'
+      pg2_priv1: '{{ info.results.0.instance.ipv4[1] }}'
+      pg3_priv1: '{{ info.results.1.instance.ipv4[1] }}'
+
+  - name: update group_vars
+    blockinfile:
+      path: ./group_vars/postgresql/vars
+      marker: "# {mark} INSTANCE VARS"
+      block: |
+        # hostnames 
+        pg1_hostname: {{ pg1_hostname | replace('_', '-') }}
+        pg2_hostname: {{ pg2_hostname |replace('_', '-') }}
+        pg3_hostname: {{ pg3_hostname | replace('_', '-')}}
+        # public ips
+        pg1_ip1: {{ pg1_ip1 }}
+        pg2_ip1: {{ pg2_ip1 }}
+        pg3_ip1: {{ pg3_ip1 }}
+        # private ips
+        pg1_priv1: {{ pg1_priv1 }}
+        pg2_priv1: {{ pg2_priv1 }}
+        pg3_priv1: {{ pg3_priv1 }}
+
+  - name: test connectivity
+    ping: 
+    with_items: "{{ info.results }}"
+
+  - name: update inventory
+    blockinfile:
+      path: ./hosts
+      marker: "# {mark} POSTGRESQL LINODES"
+      block: |
+        [postgresql]
+        localhost ansible_connection=local user=root
+        {{ pg2_ip1 }}
+        {{ pg3_ip1 }}
+
+  - name: wait for port 22 to become open
+    wait_for:
+      port: 22
+      host: '{{ item }}'
+      search_regex: OpenSSH
+      delay: 10
+    connection: local
+    with_items:
+      - '{{ pg1_ip1 }}'
+      - '{{ pg2_ip1 }}'
+      - '{{ pg3_ip1 }}'

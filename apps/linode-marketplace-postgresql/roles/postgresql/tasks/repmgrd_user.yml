@@ -1,0 +1,21 @@
+---
+- name: creating repmgrd in database
+  postgresql_user:
+    name: repmgr
+    password: "{{ repmgrd_passwd }}"
+    conn_limit: -1
+    role_attr_flags: SUPERUSER
+  become_user: postgres
+  become: true
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][0] }}"
+
+- name: creating repmgr database for repmgr user
+  postgresql_db:
+    name: repmgr
+    owner: repmgr
+    state: present
+  become_user: postgres
+  become: true
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][0] }}"
