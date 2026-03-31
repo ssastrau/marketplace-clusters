@@ -6,12 +6,12 @@
       - group_vars/redis-sentinel/secret_vars
   
   vars:
-    count: '{{ cluster_size - 1 }}' # UDF
+    count: '{{ cluster_size - 1 }}'
        
   tasks:
   - name: creating redis-sentinel cluster
     linode.cloud.instance:
-      label: '{{ instance_prefix }}{{ item | int + 1 }}'
+      label: 'redis-instance-{{ item | int + 1 }}-{{ uuid }}'
       api_token: '{{ token }}'
       type: '{{ type }}'
       region: '{{ region }}'
@@ -29,7 +29,7 @@
   - name: get info about the instances
     linode.cloud.instance_info:
       api_token: '{{ token }}'
-      label: '{{ instance_prefix }}{{ item }}'
+      label: 'redis-instance-{{ item }}-{{ uuid }}'
     register: info
     with_sequence: count='{{ cluster_size }}'
 
