@@ -1,36 +1,36 @@
+---
 # roles/common/tasks
 
 # common tasks for all linodes
-- name: apt update
+- name: Apt update
   apt:
-    update_cache: yes
-
-- name: apt upgrade
+    update_cache: true
+- name: Apt upgrade
   apt:
     upgrade: full
 
-- name: install basic packages
+- name: Install basic packages
   apt:
     pkg:
-    - htop
-    - rsync
-    - strace
-    - figlet
-    - software-properties-common  
-    - gnupg2
-    - ssl-cert
-    - python3-postgresql
-    - python3-psycopg2
-    - python3-passlib
+      - htop
+      - rsync
+      - strace
+      - figlet
+      - software-properties-common
+      - gnupg2
+      - ssl-cert
+      - python3-postgresql
+      - python3-psycopg2
+      - python3-passlib
     state: present
 
-- name: secure ssh configs
+- name: Secure ssh configs
   lineinfile:
     path: /etc/ssh/sshd_config
-    regexp: "{{ item.search }}"
-    line: "{{ item.replace }}"
+    regexp: '{{ item.search }}'
+    line: '{{ item.replace }}'
   loop:
     - { search: '^\#?PermitRootLogin (yes|no)', replace: 'PermitRootLogin without-password' }
     - { search: '^\#?PasswordAuthentication (yes|no)', replace: 'PasswordAuthentication no' }
     - { search: '^\#?PubkeyAuthentication (yes|no)', replace: 'PubkeyAuthentication yes' }
-  notify: restart ssh
+  notify: Restart ssh

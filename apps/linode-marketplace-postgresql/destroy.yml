@@ -1,20 +1,17 @@
 ---
 # destroy mongodb linodes
-
-- name: destroying linodes
+- name: Destroying linodes
   hosts: localhost
   connection: local
   vars_files:
-      - group_vars/postgresql/vars
-      - group_vars/postgresql/secret_vars
-  
+    - group_vars/postgresql/vars
+    - group_vars/postgresql/secret_vars
   vars:
     count: '{{ cluster_size - 1 }}'
-
   tasks:
-  - name: deleting postgresql linodes
-    linode.cloud.instance:
-      label: 'postgresql-instance-{{ item | int + 1 }}-{{ uuid }}'
-      api_token: '{{ token }}'
-      state: absent
-    with_sequence: count='{{count}}'
+    - name: Deleting postgresql linodes
+      linode.cloud.instance:
+        label: 'postgresql-instance-{{ item | int + 1 }}-{{ uuid }}'
+        api_token: '{{ token }}'
+        state: absent
+      with_sequence: count='{{ count }}'

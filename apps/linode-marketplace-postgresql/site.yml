@@ -1,7 +1,8 @@
+---
 # linode Postgres ansible playbook
 
 # linodes
-- name: configure Postgresql Linodes
+- name: Configure Postgresql Linodes
   hosts: postgresql
   any_errors_fatal: true
   user: root
@@ -10,8 +11,4 @@
   vars_files:
     - group_vars/postgresql/vars
     - group_vars/postgresql/secret_vars
-  
-  roles:
-    - common      
-    - postgresql
-    - post
+  roles: [common, postgresql, post]

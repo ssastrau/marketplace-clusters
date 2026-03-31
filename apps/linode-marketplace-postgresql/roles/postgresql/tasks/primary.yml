@@ -1,5 +1,5 @@
 ---
-- name: registering pg1 as primary
+- name: Registering pg1 as primary
   shell: repmgr -Ff /etc/repmgrd/repmgr.conf primary register
   become_user: postgres
   become: true

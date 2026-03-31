@@ -1,29 +1,28 @@
 ---
 # roles/postgresql_cluster/tasks
-
-- name: install firewalld
+- name: Install firewalld
   import_tasks: firewalld.yml
 
-- name: install postgresql 14
+- name: Install postgresql 14
   import_tasks: install.yml
 
-- name: generating psql SSH keypair
+- name: Generating psql SSH keypair
   import_tasks: keypair.yml
 
-- name: creating repmgrd database and user
+- name: Creating repmgrd database and user
   import_tasks: repmgrd_user.yml
 
-- name: backup and configure postgresql
+- name: Backup and configure postgresql
   import_tasks: postgresql.yml
 
-- name: backup and configure repmgrd
+- name: Backup and configure repmgrd
   import_tasks: repmgrd.yml
 
-- name: register pg1 as primary
+- name: Register pg1 as primary
   import_tasks: primary.yml
 
-- name: clone pg2 and resgister as secondary
+- name: Clone pg2 and resgister as secondary
   import_tasks: standby.yml
 
-- name: enable and start repmgrd service
+- name: Enable and start repmgrd service
   import_tasks: repmgrd_svc.yml
