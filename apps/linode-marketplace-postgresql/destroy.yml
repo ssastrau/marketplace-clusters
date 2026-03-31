@@ -9,12 +9,12 @@
       - group_vars/postgresql/secret_vars
   
   vars:
-    count: 2
+    count: '{{ cluster_size - 1 }}'
 
   tasks:
   - name: deleting postgresql linodes
     linode.cloud.instance:
-      label: '{{ instance_prefix }}{{ item | int + 1 }}'
+      label: 'postgresql-instance-{{ item | int + 1 }}-{{ uuid }}'
       api_token: '{{ token }}'
       state: absent
     with_sequence: count='{{count}}'
