@@ -2,21 +2,20 @@
 # roles/redis-sentinel/tasks/sentinel.yml
 
 # configure redis-sentinel
-
-- name: create backup of redis-sentinel configurations
-  copy: 
+- name: Create backup of redis-sentinel configurations
+  copy:
     src: /etc/redis/sentinel.conf
     dest: /etc/redis/sentinel.conf.bak
-    remote_src: yes
+    remote_src: true
     owner: redis
     group: redis
     mode: '0644'
 
-- name: removing redis sentinel default values
+- name: Removing redis sentinel default values
   replace:
     path: /etc/redis/sentinel.conf
-    regexp: "{{ item.search }}"
-    replace: "{{ item.replace }}"
+    regexp: '{{ item.search }}'
+    replace: '{{ item.replace }}'
   loop:
     - { search: '^(port)', replace: '# \1' }
     - { search: '^(bind)', replace: '# \1' }
@@ -25,10 +24,10 @@
     - { search: '^(sentinel auth-pass)', replace: '# \1' }
     - { search: '^(protected-mode)', replace: '# \1' }
 
-- name: updating sentinel config in the cluster
+- name: Updating sentinel config in the cluster
   blockinfile:
     path: /etc/redis/sentinel.conf
-    marker: "# {mark} LINODE OCC"
+    marker: '# {mark} LINODE OCC'
     block: |
       # TLS/SSL
       port 0
@@ -39,19 +38,19 @@
       tls-ca-cert-file {{ redis_cacert }}
       tls-auth-clients optional
       tls-replication yes
-      # general    
+      # general
       bind 127.0.0.1 ::1 {{ redis_data.results[count].instance.ip_priv1 }}
       protected-mode no
       daemonize yes
       sentinel monitor mymaster {{ redis_data.results[0].instance.ip_priv1 }} 6379 2
       sentinel auth-pass mymaster {{ redis_password }}
   run_once: true
-  delegate_to: "{{ item }}"
+  delegate_to: '{{ item }}'
   loop: "{{ groups['all'] }}"
   loop_control:
     index_var: count
 
-- name: starting redis-sentinel on primary
+- name: Starting redis-sentinel on primary
   systemd:
     name: redis-sentinel
     state: started

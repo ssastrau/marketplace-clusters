@@ -1,7 +1,8 @@
+---
 # linode redis-sentinel ansible playbook
 
 # linodes
-- name: configure redis-sentinel cluster
+- name: Configure redis-sentinel cluster
   hosts: all
   any_errors_fatal: true
   user: root
@@ -10,8 +11,4 @@
   vars_files:
     - group_vars/redis-sentinel/vars
     - group_vars/redis-sentinel/secret_vars
-  
-  roles:
-    - common      
-    - redis-sentinel
-    - post
+  roles: [common, redis-sentinel, post]

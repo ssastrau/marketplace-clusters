@@ -2,9 +2,8 @@
 # roles/redis-sentinel/tasks/ssl.yml
 # generate ssl/tls certificate
 
-#ca certificate
-
-- name: create directory for ssl files
+# ca certificate
+- name: Create directory for ssl files
   file:
     path: /etc/redis/tls
     state: directory
@@ -12,13 +11,13 @@
     group: redis
     mode: '0755'
 
-- name: generate ca passphrase
+- name: Generate ca passphrase
   set_fact:
     ca_password: "{{ lookup('password', '/dev/null length=25 chars=ascii_letters,digits,punctuation') }}"
   run_once: true
   delegate_to: "{{ groups['redis_primary'][0] }}"
 
-- name: generate ca key
+- name: Generate ca key
   community.crypto.openssl_privatekey_pipe:
     passphrase: '{{ ca_password }}'
     cipher: auto
@@ -26,7 +25,7 @@
   run_once: true
   delegate_to: "{{ groups['redis_primary'][0] }}"
 
-- name: generate ca csr
+- name: Generate ca csr
   community.crypto.openssl_csr_pipe:
     privatekey_content: '{{ ca_key.privatekey }}'
     privatekey_passphrase: '{{ ca_password }}'
@@ -39,7 +38,7 @@
     use_common_name_for_san: false
     basic_constraints:
       - 'CA:TRUE'
-    basic_constraints_critical: yes
+    basic_constraints_critical: true
     key_usage:
       - keyCertSign
     key_usage_critical: true
@@ -47,7 +46,7 @@
   run_once: true
   delegate_to: "{{ groups['redis_primary'][0] }}"
 
-- name: generate ca crt
+- name: Generate ca crt
   community.crypto.x509_certificate:
     path: '{{ redis_cacert }}'
     privatekey_content: '{{ ca_key.privatekey }}'
@@ -59,19 +58,18 @@
     group: redis
     mode: '0640'
 
-#server certitificate
-
-- name: generate server key
+# server certitificate
+- name: Generate server key
   community.crypto.openssl_privatekey:
     path: '{{ redis_key }}'
-    return_content: yes
+    return_content: true
     owner: redis
     group: redis
     mode: '0640'
   no_log: true
   register: server_key
 
-- name: generate server csr
+- name: Generate server csr
   community.crypto.openssl_csr_pipe:
     privatekey_path: '{{ redis_key }}'
     country_name: '{{ country_name }}'
@@ -83,10 +81,10 @@
     use_common_name_for_san: false
   register: server_csr
 
-- name: generate server cert signed with ca cert
+- name: Generate server cert signed with ca cert
   community.crypto.x509_certificate:
     path: '{{ redis_cert }}'
-    return_content: yes
+    return_content: true
     privatekey_path: '{{ redis_key }}'
     csr_content: '{{ server_csr.csr }}'
     ownca_path: '{{ redis_cacert }}'
@@ -99,7 +97,7 @@
     mode: '0640'
   register: server_crt
 
-- name: generate DH params
+- name: Generate DH params
   community.crypto.openssl_dhparam:
     path: '{{ redis_dh }}'
     size: 2048
@@ -107,7 +105,7 @@
     group: redis
     mode: '0640'
 
-- name: clear varibles
+- name: Clear varibles
   set_fact:
     ca_crt: ''
     ca_csr: ''

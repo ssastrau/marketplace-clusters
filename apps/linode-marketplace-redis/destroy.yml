@@ -1,20 +1,17 @@
 ---
 # destroy linodes
-
-- name: destroying linodes
+- name: Destroying linodes
   hosts: localhost
   connection: local
   vars_files:
-      - group_vars/redis-sentinel/vars
-      - group_vars/redis-sentinel/secret_vars
-  
+    - group_vars/redis-sentinel/vars
+    - group_vars/redis-sentinel/secret_vars
   vars:
     count: '{{ cluster_size - 1 }}'
-
   tasks:
-  - name: deleting linodes except provisioner
-    linode.cloud.instance:
-      label: 'redis-instance-{{ item | int + 1 }}-{{ uuid }}'
-      api_token: '{{ token }}'
-      state: absent
-    with_sequence: count='{{count}}'
+    - name: Deleting linodes except provisioner
+      linode.cloud.instance:
+        label: 'redis-instance-{{ item | int + 1 }}-{{ uuid }}'
+        api_token: '{{ token }}'
+        state: absent
+      with_sequence: count='{{ count }}'

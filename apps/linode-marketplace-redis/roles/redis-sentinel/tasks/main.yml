@@ -1,20 +1,19 @@
 ---
 # roles/redis-sentinel/tasks/main.yml
-
-- name: configure hostname
+- name: Configure hostname
   import_tasks: hostname.yml
 
-- name: configure firewalld
+- name: Configure firewalld
   import_tasks: firewalld.yml
 
-- name: install redis
+- name: Install redis
   import_tasks: install.yml
 
-- name: generating ssl certificates
+- name: Generating ssl certificates
   import_tasks: ssl.yml
 
-- name: configure redis
+- name: Configure redis
   import_tasks: redis.yml
 
-- name: configure redis-sentinel
+- name: Configure redis-sentinel
   import_tasks: sentinel.yml
