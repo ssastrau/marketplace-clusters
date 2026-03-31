@@ -1,0 +1,37 @@
+---
+# roles/common/tasks/main.yml
+
+# common tasks for all linodes
+- name: Force ipv4 with apt
+  copy:
+    content: Acquire::ForceIPv4 "true";
+    dest: /etc/apt/apt.conf.d/99force-ipv4
+    mode: '0600'
+
+- name: Update system packages
+  import_role:
+    name: update_pkgs
+
+- name: Install basic packages
+  apt:
+    pkg:
+      - ntp
+      - wget
+      - curl
+      - htop
+      - rsync
+      - fail2ban
+      - python3-pip
+      - python3-mysqldb
+    state: present
+
+# disable root login w/wo pubkey
+- name: Secure ssh
+  import_role:
+    name: securessh
+  when: disable_root is defined
+
+# fail2ban
+- name: Enabling fail2ban
+  import_role:
+    name: fail2ban_install

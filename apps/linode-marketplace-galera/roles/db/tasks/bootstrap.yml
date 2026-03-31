@@ -1,0 +1,27 @@
+---
+# roles/db/tasks/bootstrap.yml
+
+# bootstrap the cluster
+- name: Stop mysql
+  systemd:
+    name: mysql
+    state: stopped
+
+- name: Bootstrap {{ host1 }}
+  shell: galera_new_cluster
+  run_once: true
+  delegate_to: "{{ groups['galera_servers'][0] }}"
+
+- name: Start mysql {{ host2 }}
+  systemd:
+    name: mysql
+    state: started
+  run_once: true
+  delegate_to: "{{ groups['galera_servers'][1] }}"
+
+- name: Start mysql {{ host3 }}
+  systemd:
+    name: mysql
+    state: started
+  run_once: true
+  delegate_to: "{{ groups['galera_servers'][2] }}"

@@ -1,0 +1,14 @@
+---
+# roles/precheck/tasks/main.yml
+- name: Stat grastate.dat
+  stat:
+    path: /var/lib/mysql/grastate.dat
+  run_once: true
+  register: grastate
+
+- name: Exit if galera cluster exists
+  fail:
+    msg: Galera cluster may already be present. Only use this for new deployments.
+  when: grastate.stat.exists
+  run_once: true
+  delegate_to: localhost

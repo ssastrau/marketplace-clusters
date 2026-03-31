@@ -1,0 +1,13 @@
+---
+# roles/common/handlers/main.yml
+- name: Start fail2ban
+  service:
+    name: fail2ban
+    state: started
+    enabled: true
+
+- name: Restart ssh
+  service:
+    name: ssh
+    state: restarted
+    enabled: true

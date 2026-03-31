@@ -1,0 +1,16 @@
+---
+# roles/db/tasks
+- name: Install mariadb
+  import_tasks: install.yml
+
+- name: Configure firewall
+  import_tasks: firewall.yml
+
+- name: Configure ssl/tls
+  import_tasks: ssl.yml
+
+- name: Configure galera
+  import_tasks: galera.yml
+
+- name: Bootstap cluster
+  import_tasks: bootstrap.yml
