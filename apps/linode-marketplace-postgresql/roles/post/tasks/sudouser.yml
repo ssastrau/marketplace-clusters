@@ -5,7 +5,7 @@
     sudo_username_pass: "{{ lookup('password', '/dev/null length=32 chars=ascii_letters,digits,punctuation') }}"
   no_log: true
   run_once: true
-  delegate_to: "{{ groups['nomad_client'][0] }}"
+  delegate_to: "{{ groups['postgresql'][0] }}"
 
 - name: Create sudo user
   user:

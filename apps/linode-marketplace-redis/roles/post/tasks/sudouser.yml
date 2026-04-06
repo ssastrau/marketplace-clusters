@@ -3,6 +3,7 @@
 - name: Generate sudo user password
   set_fact:
     sudo_username_pass: "{{ lookup('password', '/dev/null length=32 chars=ascii_letters,digits,punctuation') }}"
+  no_log: true
   run_once: true
   delegate_to: "{{ groups['redis_primary'][0] }}"
 

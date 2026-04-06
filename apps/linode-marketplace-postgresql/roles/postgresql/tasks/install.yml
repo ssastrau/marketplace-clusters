@@ -1,0 +1,52 @@
+---
+# general tasks
+- name: Set pg1 hostname
+  hostname:
+    use: systemd
+    name: '{{ pg1_hostname }}'
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][0] }}"
+
+- name: Set pg2 hostname
+  hostname:
+    use: systemd
+    name: '{{ pg2_hostname }}'
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][1] }}"
+
+- name: Set pg3 hostname
+  hostname:
+    use: systemd
+    name: '{{ pg3_hostname }}'
+  run_once: true
+  delegate_to: "{{ groups['postgresql'][2] }}"
+
+- name: Update /etc/hosts
+  blockinfile:
+    path: /etc/hosts
+    marker: '# {mark} Postgresql servers'
+    block: |
+      {{ pg1_priv1 }} {{ pg1_hostname }} pg1
+      {{ pg2_priv1 }} {{ pg2_hostname }} pg2
+      {{ pg3_priv1 }} {{ pg3_hostname }} pg3
+
+- name: Importing signing key for repo
+  apt_key:
+    url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+    state: present
+
+- name: Adding postgresql repository
+  apt_repository:
+    repo: deb http://apt.postgresql.org/pub/repos/apt jammy-pgdg main
+    filename: pgdg
+    state: present
+
+- name: Updating repos
+  apt:
+    update_cache: true
+
+- name: Installing postgresql-14 and repmgrd packages
+  apt:
+    name: '{{ item }}'
+    state: present
+  loop: [postgresql-14, postgresql-14-repmgr]
