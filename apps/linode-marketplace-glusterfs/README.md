@@ -36,7 +36,7 @@ This should _not_ be used for updating an existing deployment. Additional playbo
 
 ## Supported Distribution
 
-- Ubuntu 22.04 
+- Ubuntu 24.04 
 
 ## GlusterFS Version
 - 10.1
@@ -81,14 +81,14 @@ token: !vault |
           6365653234666565353634653030316638326662316165386637
 ```
 
-Configure the Linode instance [parameters](https://github.com/linode/ansible_linode/blob/master/docs/instance.rst#id3), `server` and `client` prefixes, and `cluster_name` variables in `group_vars/gluster/vars`. As with the above, replace the example values with your own. This playbook was written to support `linode/ubuntu22.04` image.
+Configure the Linode instance [parameters](https://github.com/linode/ansible_linode/blob/master/docs/instance.rst#id3), `server` and `client` prefixes, and `cluster_name` variables in `group_vars/gluster/vars`. As with the above, replace the example values with your own. This playbook was written to support `linode/ubuntu24.04` image.
 ```
 ssh_keys: ssh-rsa AAAA_valid_public_ssh_key_123456785== user@their-computer
 server_prefix: gluster
 cluster_name: POC
 type: g6-standard-4
 region: ap-south
-image: linode/ubuntu22.04
+image: linode/ubuntu24.04
 linode_tags: POC
 ```
 

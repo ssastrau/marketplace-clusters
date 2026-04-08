@@ -15,7 +15,7 @@ Couchbase Enterprise Server is not free to use in production. Use this contact f
 
 ## Supported Distribution
 
-- Ubuntu 22.04 
+- Ubuntu 24.04 
 
 ## Required Instance Type
 

@@ -25,7 +25,7 @@ Create a highly available Apache Cassandra cluster using through the Linode Mark
 
 ## Configuration Options
 
-- **Supported distributions:** Ubuntu 22.04 LTS
+- **Supported distributions:** Ubuntu 24.04 LTS
 - **Suggested minimum plan:** All plan types and sizes can be used. For best results, use a minimum of 8GB Dedicated CPU or Shared Compute Instance is recommended. 
 
 ### Apache Cassandra Options
