@@ -14,7 +14,7 @@
       - rsync
       - fail2ban
       - python3-pip
-      - python3-mysqldb
+      - python3-pymysql
       - net-tools
       - apt-transport-https
       - ufw

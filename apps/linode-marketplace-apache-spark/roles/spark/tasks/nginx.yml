@@ -5,11 +5,11 @@
     state: present
 
 - name: Create basic auth password file
-  community.general.htpasswd:
-    path: /etc/nginx/.htpasswd
-    name: "{{ spark_user }}"
-    password: "{{ spark_ui_password }}"
-    mode: '0644'
+  shell: >
+    htpasswd -cbB /etc/nginx/.htpasswd "{{ spark_user }}" "{{ spark_ui_password }}"
+  args:
+    executable: /bin/bash
+  no_log: true
 
 - name: Remove default NGINX site
   file:
