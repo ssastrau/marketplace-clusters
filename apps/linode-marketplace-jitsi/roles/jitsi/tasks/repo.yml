@@ -12,7 +12,7 @@
 - name: Add prosody repository
   ansible.builtin.apt_repository:
     filename: prosody
-    repo: 'deb [signed-by=/usr/share/keyrings/prosody-keyring.gpg] https://packages.prosody.im/debian jammy main'
+    repo: 'deb [signed-by=/usr/share/keyrings/prosody-keyring.gpg] https://packages.prosody.im/debian noble main'
 
 - name: Add jitsi GPG key
   get_url:
