@@ -15,7 +15,7 @@ Our marketplace app allows you to create a Jitsi cluster that decouples Jitsi's 
 
 **Supported Distributions:**
 
-- Ubuntu 22.04 LTS
+- Ubuntu 24.04 LTS
 
 ## Linode Helpers Included
 
