@@ -17,7 +17,7 @@
         root_pass: '{{ root_pass }}'
         authorized_keys: '{{ ssh_keys }}'
         private_ip: true
-        stackscript_id: 1146324
+        # stackscript_id: 1146324
         ua_prefix: 'marketplace-galera-occ'
         group: '{{ group }}'
         tags: '{{ linode_tags }}'
