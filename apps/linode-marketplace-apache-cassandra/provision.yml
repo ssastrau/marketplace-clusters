@@ -29,7 +29,7 @@
         root_pass: '{{ root_pass }}'
         authorized_keys: '{{ ssh_keys }}'
         private_ip: true
-        stackscript_id: 1350852
+        # stackscript_id: 1350852
         ua_prefix: 'marketplace-apache-cassandra-occ'
         tags: '{{ linode_tags }}'
         state: present

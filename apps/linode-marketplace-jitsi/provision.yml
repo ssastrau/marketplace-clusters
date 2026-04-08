@@ -22,7 +22,7 @@
         type: '{{ jvb_type }}'
         region: '{{ region }}'
         image: '{{ image }}'
-        stackscript_id: '1350734'
+        # stackscript_id: '1350734'
         ua_prefix: 'marketplace-jitsi-occ'
         root_pass: '{{ root_pass }}'
         authorized_keys: '{{ ssh_keys }}'
