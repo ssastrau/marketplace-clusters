@@ -3,7 +3,7 @@
 Deploy a three node, MariaDB Galera cluster from the Linode Marketplace. Galera provides a performant multi-master/active-active database solution with synchronous replication, to achieve high availability.
 
 Supported distributions:
-- Ubuntu 22.04
+- Ubuntu 24.04
 
 MariaDB version:
  - 10.6
