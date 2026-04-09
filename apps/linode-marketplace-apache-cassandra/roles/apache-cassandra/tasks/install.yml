@@ -13,9 +13,23 @@
 
 - name: Install basic packages
   apt:
-    pkg: [cassandra, cassandra-tools]
+    pkg: [cassandra, cassandra-tools, python3-pip]
     state: present
     update_cache: true
+
+- name: Install cqlsh via pip
+  command: /usr/bin/python3 -m pip install --break-system-packages --upgrade cqlsh==6.2.1
+
+- name: Replace system cqlsh wrapper with pip version
+  copy:
+    dest: /usr/bin/cqlsh
+    content: |
+      #!/bin/sh
+      exec /usr/local/bin/cqlsh "$@"
+    mode: '0755'
+
+- name: Verify cqlsh is available
+  command: /usr/bin/cqlsh --version
 
 - name: Stop cassandra to configure cluster
   systemd:
