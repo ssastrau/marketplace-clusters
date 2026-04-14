@@ -81,7 +81,7 @@
 
 #<postgres>
 - name: adding postgresql repository
-  shell: echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list
+  shell: echo "deb http://apt.postgresql.org/pub/repos/apt noble-pgdg main" > /etc/apt/sources.list.d/pgdg.list
 
 - name: importing signing key for repo
   apt_key:
@@ -92,13 +92,13 @@
   apt:
     update_cache: yes
 
-- name: Installing postgresql-14 and repmgrd packages
+- name: Installing postgresql-16 and repmgrd packages
   apt:
     name: "{{ item }}"
     state: present
   loop:
-    - postgresql-14 
-    - postgresql-14-repmgr  
+    - postgresql-16
+    - postgresql-16-repmgr
 
 #</postgres>      
 
@@ -184,17 +184,17 @@
 
 # backup/update hba and postgresql.conf
 - name: creating pg_hba.conf backup
-  copy: 
-    src: /etc/postgresql/14/main/pg_hba.conf 
-    dest: /etc/postgresql/14/main/pg_hba.conf.bak
+  copy:
+    src: /etc/postgresql/16/main/pg_hba.conf
+    dest: /etc/postgresql/16/main/pg_hba.conf.bak
     remote_src: yes
     owner: postgres
     group: postgres
 
 - name: creating postgresql.conf backup
-  copy: 
-    src: /etc/postgresql/14/main/postgresql.conf 
-    dest: /etc/postgresql/14/main/postgresql.bak
+  copy:
+    src: /etc/postgresql/16/main/postgresql.conf
+    dest: /etc/postgresql/16/main/postgresql.bak
     remote_src: yes
     owner: postgres
     group: postgres    
@@ -208,8 +208,8 @@
 
 - name: updating pg1 pg_hba.conf file 
   template:
-    src: pg_hba.conf.j2 
-    dest: "/etc/postgresql/14/main/pg_hba.conf"
+    src: pg_hba.conf.j2
+    dest: "/etc/postgresql/16/main/pg_hba.conf"
     owner: postgres
     group: postgres    
   run_once: true
@@ -218,7 +218,7 @@
 - name: updating pg1 postgresql.conf file 
   template:
     src: postgresql.conf.j2 
-    dest: "/etc/postgresql/14/main/postgresql.conf"
+    dest: "/etc/postgresql/16/main/postgresql.conf"
     owner: postgres
     group: postgres    
   run_once: true
@@ -241,7 +241,7 @@
 - name: updating pg2 pg_hba.conf file
   template:
     src: pg_hba.conf.j2
-    dest: "/etc/postgresql/14/main/pg_hba.conf"
+    dest: "/etc/postgresql/16/main/pg_hba.conf"
     owner: postgres
     group: postgres    
   run_once: true
@@ -250,7 +250,7 @@
 - name: updating pg2 postgresql.conf file 
   template:
     src: postgresql.conf.j2 
-    dest: "/etc/postgresql/14/main/postgresql.conf"
+    dest: "/etc/postgresql/16/main/postgresql.conf"
     owner: postgres
     group: postgres    
   run_once: true
