@@ -127,7 +127,7 @@ function rename_provisioner {
 		https://api.linode.com/v4/linode/instances/${LINODE_ID}
 }
 
-readonly REDIS_VERSION='7.0.7'
+readonly REDIS_VERSION='7.4.1'
 readonly group_vars="${WORK_DIR}/${MARKETPLACE_APP}/group_vars/redis-sentinel/vars"
 
 function destroy {
