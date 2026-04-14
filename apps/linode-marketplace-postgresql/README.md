@@ -5,7 +5,7 @@
 Create a highly available Postgresql database cluster using the [Linode Ansible Collection](https://github.com/linode/ansible_linode) and [Repmgr](https://repmgr.org/) through the Akamai Compute Marketplace.
 
 **Distributions:**
-- Ubuntu 22.04 LTS
+- Ubuntu 24.04 LTS
 
 **Postgresql:**
  - 14
