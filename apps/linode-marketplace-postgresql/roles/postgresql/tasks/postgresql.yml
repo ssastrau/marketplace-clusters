@@ -1,8 +1,8 @@
 ---
 - name: Creating pg_hba.conf backup
   copy:
-    src: /etc/postgresql/14/main/pg_hba.conf
-    dest: /etc/postgresql/14/main/pg_hba.conf.bak
+    src: /etc/postgresql/16/main/pg_hba.conf
+    dest: /etc/postgresql/16/main/pg_hba.conf.bak
     remote_src: true
     owner: postgres
     group: postgres
@@ -10,8 +10,8 @@
 
 - name: Creating postgresql.conf backup
   copy:
-    src: /etc/postgresql/14/main/postgresql.conf
-    dest: /etc/postgresql/14/main/postgresql.conf.bak
+    src: /etc/postgresql/16/main/postgresql.conf
+    dest: /etc/postgresql/16/main/postgresql.conf.bak
     remote_src: true
     owner: postgres
     group: postgres
@@ -29,7 +29,7 @@
 - name: Updating pg1 pg_hba.conf file
   template:
     src: pg_hba.conf.j2
-    dest: '/etc/postgresql/14/main/pg_hba.conf'
+    dest: '/etc/postgresql/16/main/pg_hba.conf'
     owner: postgres
     group: postgres
     mode: '0644'
@@ -39,7 +39,7 @@
 - name: Updating pg1 postgresql.conf file
   template:
     src: postgresql.conf.j2
-    dest: '/etc/postgresql/14/main/postgresql.conf'
+    dest: '/etc/postgresql/16/main/postgresql.conf'
     owner: postgres
     group: postgres
     mode: '0644'
@@ -58,7 +58,7 @@
 - name: Updating pg2 pg_hba.conf file
   template:
     src: pg_hba.conf.j2
-    dest: '/etc/postgresql/14/main/pg_hba.conf'
+    dest: '/etc/postgresql/16/main/pg_hba.conf'
     owner: postgres
     group: postgres
     mode: '0644'
@@ -68,7 +68,7 @@
 - name: Updating pg2 postgresql.conf file
   template:
     src: postgresql.conf.j2
-    dest: '/etc/postgresql/14/main/postgresql.conf'
+    dest: '/etc/postgresql/16/main/postgresql.conf'
     owner: postgres
     group: postgres
     mode: '0644'
@@ -87,7 +87,7 @@
 - name: Updating pg3 pg_hba.conf file
   template:
     src: pg_hba.conf.j2
-    dest: '/etc/postgresql/14/main/pg_hba.conf'
+    dest: '/etc/postgresql/16/main/pg_hba.conf'
     owner: postgres
     group: postgres
     mode: '0644'
@@ -97,7 +97,7 @@
 - name: Updating pg3 postgresql.conf file
   template:
     src: postgresql.conf.j2
-    dest: '/etc/postgresql/14/main/postgresql.conf'
+    dest: '/etc/postgresql/16/main/postgresql.conf'
     owner: postgres
     group: postgres
     mode: '0644'
