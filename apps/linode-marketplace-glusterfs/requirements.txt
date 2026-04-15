@@ -1,6 +1,6 @@
-wheel==0.38.4
+wheel==0.46.3
 linode-api4==5.5.0
-ansible==6.6.0
+ansible==12.2.0
 passlib==1.7.4
 polling==0.3.2
 yamllint==1.26.2
