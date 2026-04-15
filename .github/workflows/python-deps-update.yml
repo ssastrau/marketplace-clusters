@@ -1,0 +1,100 @@
+---
+name: Update dependencies across all apps
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'  # Every Monday at 09:00 UTC
+  workflow_dispatch:      # Allow manual trigger
+
+jobs:
+  check-versions:
+    name: Check outdated Python dependencies
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      any_updates: ${{ steps.check.outputs.any_updates }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Check outdated dependencies
+        id: check
+        run: |
+          bash .github/scripts/python-deps-check.sh
+          TOTAL=$(python3 -c "import json; d=json.load(open('/tmp/outdated.json')); print(sum(len(v) for v in d.values()))")
+          if [ "$TOTAL" -gt 0 ]; then
+            echo "any_updates=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "any_updates=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload outdated report
+        if: steps.check.outputs.any_updates == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: outdated-report
+          path: /tmp/outdated.json
+          retention-days: 1
+
+  update-versions:
+    name: Apply updates and open PR
+    runs-on: ubuntu-latest
+    needs: check-versions
+    if: needs.check-versions.outputs.any_updates == 'true'
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Download outdated report
+        uses: actions/download-artifact@v4
+        with:
+          name: outdated-report
+          path: /tmp
+
+      - name: Apply dependency updates
+        id: update
+        run: |
+          BRANCH="chore/python-deps-update-$(date +%Y-%m-%d)"
+          echo "branch=${BRANCH}" >> "$GITHUB_OUTPUT"
+          bash .github/scripts/python-deps-update.sh
+
+      - name: Show diff
+        run: git diff apps/*/requirements.txt
+
+      - name: Commit and push branch
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "${{ steps.update.outputs.branch }}"
+          git add apps/*/requirements.txt
+          git commit -m "chore: update Python dependencies ($(date +%Y-%m-%d))"
+          git push origin "${{ steps.update.outputs.branch }}"
+
+      - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+            --title "chore: Python dependency updates $(date +%Y-%m-%d)" \
+            --body-file /tmp/pr_body.md \
+            --base main \
+            --head "${{ steps.update.outputs.branch }}" \
+            --label "dependencies"
