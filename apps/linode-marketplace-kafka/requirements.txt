@@ -10,7 +10,7 @@
 #molecule-vagrant==1.0.0
 #python-vagrant==1.0.0
 #ansible-specdoc==0.0.14
-#pyyaml==6.0.1
+#pyyaml==6.0.3
 
 ## ansible dependancies ##
 ansible==12.2.0
@@ -18,7 +18,7 @@ yamllint==1.26.2
 ansible-lint==6.0.1
 flake8==3.9.2
 dnspython==2.6.1
-pyyaml==6.0.1
+pyyaml==6.0.3
 dnspython==2.6.1
 passlib==1.7.4
 ## cloud.linode module dependancies ##

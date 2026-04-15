@@ -7,7 +7,7 @@ linode-api4==5.7.0
 dnspython==2.6.1
 polling==0.3.2
 ansible-specdoc==0.0.14
-pyyaml==6.0.1
+pyyaml==6.0.3
 dnspython==2.6.1
 #molecule==3.6.1
 #molecule-vagrant==1.0.0
