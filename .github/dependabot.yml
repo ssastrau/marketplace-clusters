@@ -1,0 +1,19 @@
+version: 2
+updates:
+  # Python packages
+  - package-ecosystem: "pip"
+    directories:
+      - "/apps"
+    schedule:
+      interval: "daily"
+      time: "11:00"
+      timezone: "Europe/Warsaw"
+
+  # Ansible collections
+  - package-ecosystem: "galaxy"
+    directories:
+      - "/apps"
+    schedule:
+      interval: "daily"
+      time: "11:00"
+      timezone: "Europe/Warsaw"
