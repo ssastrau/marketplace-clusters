@@ -1,6 +1,6 @@
 wheel==0.46.2
 linode_api4==5.29.0
-setuptools==80.8.0
+setuptools==82.0.1
 ansible==12.2.0
 ansible-specdoc==0.0.14
 passlib==1.7.4
