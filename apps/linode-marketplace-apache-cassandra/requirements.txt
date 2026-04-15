@@ -12,4 +12,4 @@ linode-api4==5.15.1
 polling==0.3.2
 types-requests==2.31.0.10
 ansible-specdoc==0.0.14
-cqlsh==6.1.3
+cqlsh==6.2.1
