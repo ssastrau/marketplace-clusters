@@ -8,12 +8,3 @@ updates:
       interval: "daily"
       time: "11:00"
       timezone: "Europe/Warsaw"
-
-  # Ansible collections
-  - package-ecosystem: "galaxy"
-    directories:
-      - "/apps"
-    schedule:
-      interval: "daily"
-      time: "11:00"
-      timezone: "Europe/Warsaw"
