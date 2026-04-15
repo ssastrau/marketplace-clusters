@@ -7,5 +7,5 @@ linode_api4==5.30.0
 dnspython==2.8.0
 ansible-specdoc==0.0.19
 pyyaml==6.0.2
-pexpect==4.8
+pexpect==4.9.0
 jmespath==1.0.1
