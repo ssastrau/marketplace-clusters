@@ -1,0 +1,60 @@
+---
+name: Update dependencies across all apps
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+jobs:
+  update-dependencies:
+    name: Update python dependencies
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Check and update dependencies
+        id: update
+        run: |
+          BRANCH="chore/python-deps-update-$(date +%Y-%m-%d)"
+          echo "branch=${BRANCH}" >> "$GITHUB_OUTPUT"
+          python3 .github/scripts/python-deps-check.py
+
+      - name: Commit and push branch
+        if: steps.update.outputs.any_updates == 'true'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "${{ steps.update.outputs.branch }}"
+          git add apps/*/requirements.txt
+          git commit -m "chore: update Python dependencies ($(date +%Y-%m-%d))"
+          git push origin "${{ steps.update.outputs.branch }}"
+
+      - name: Create Pull Request
+        if: steps.update.outputs.any_updates == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_URL=$(gh pr create \
+            --title "chore: Python dependency updates $(date +%Y-%m-%d)" \
+            --body "" \
+            --base develop \
+            --head "${{ steps.update.outputs.branch }}")
+          gh pr close "$PR_URL"
+          gh pr edit "$PR_URL" \
+            --title "chore: Python dependency updates $(date +%Y-%m-%d)" \
+            --body-file /tmp/pr_body.md \
+            --add-label "dependencies"
+          gh pr reopen "$PR_URL"
