@@ -6,79 +6,83 @@
 
 set -euo pipefail
 
-OUTDATED_JSON="{}"
+# Initialise empty report
+echo "{}" > /tmp/outdated.json
 
 for req_file in $(find apps -name "requirements.txt" | sort); do
   app=$(echo "$req_file" | cut -d'/' -f2)
   echo "::group::Checking ${app}"
 
-  python -m venv /tmp/venv_check
+  python3 -m venv /tmp/venv_check
   /tmp/venv_check/bin/pip install --quiet --upgrade pip
 
-  # Install only active (non-commented) packages
+  # Install only active (non-commented) packages; tolerate failures (some may not resolve on this OS)
   grep -v '^\s*#' "$req_file" | grep -v '^\s*$' \
     | /tmp/venv_check/bin/pip install --quiet -r /dev/stdin || true
 
-  # Get outdated packages as JSON array: [{name, version, latest_version}]
-  APP_OUTDATED=$(/tmp/venv_check/bin/pip list --outdated --format=json 2>/dev/null || echo "[]")
+  # Write pip outdated JSON to a temp file — avoids any shell quoting issues
+  /tmp/venv_check/bin/pip list --outdated --format=json 2>/dev/null \
+    > /tmp/pip_outdated.json || echo "[]" > /tmp/pip_outdated.json
 
   rm -rf /tmp/venv_check
 
-  COUNT=$(echo "$APP_OUTDATED" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))")
-  if [ "$COUNT" -eq 0 ]; then
-    echo "All packages up to date for ${app}"
-    echo "::endgroup::"
-    continue
-  fi
+  # Filter to only packages pinned in this requirements.txt, then merge into report
+  python3 << PYEOF
+import json, re, sys
 
-  echo "Found ${COUNT} outdated package(s) for ${app}"
+req_file = "${req_file}"
+app      = "${app}"
 
-  # Filter: only include packages that are actually pinned in this requirements.txt
-  FILTERED=$(echo "$APP_OUTDATED" | python3 - <<PYEOF "$req_file"
-import sys, json, re
-
-req_file = sys.argv[1]
-with open(req_file) as f:
-    lines = f.readlines()
-
-# Build a set of pinned package names (normalised: lowercase, - and _ equivalent)
 def normalise(name):
     return re.sub(r'[-_.]', '-', name.strip().lower())
 
+# Parse pinned packages from requirements.txt
 pinned = {}
-for line in lines:
-    line = line.strip()
-    if line.startswith('#') or not line:
-        continue
-    m = re.match(r'^([A-Za-z0-9_\-\.]+)==(.+)$', line)
-    if m:
-        pinned[normalise(m.group(1))] = m.group(2)
+with open(req_file) as f:
+    for line in f:
+        line = line.strip()
+        if not line or line.startswith('#'):
+            continue
+        m = re.match(r'^([A-Za-z0-9_\-\.]+)==(.+)$', line)
+        if m:
+            pinned[normalise(m.group(1))] = m.group(2).strip()
 
-data = json.load(sys.stdin)
-result = []
-for pkg in data:
-    if normalise(pkg['name']) in pinned:
-        result.append({
+# Load what pip considers outdated
+with open('/tmp/pip_outdated.json') as f:
+    try:
+        outdated_all = json.load(f)
+    except json.JSONDecodeError:
+        outdated_all = []
+
+# Keep only those that are in this requirements.txt
+filtered = []
+for pkg in outdated_all:
+    key = normalise(pkg['name'])
+    if key in pinned:
+        filtered.append({
             'name': pkg['name'],
-            'current': pinned[normalise(pkg['name'])],
-            'latest': pkg['latest_version']
+            'current': pinned[key],
+            'latest': pkg['latest_version'],
         })
 
-print(json.dumps(result))
-PYEOF
-  )
+if filtered:
+    print(f"  Found {len(filtered)} update(s) for {app}")
+else:
+    print(f"  All pinned packages up to date for {app}")
 
-  OUTDATED_JSON=$(echo "$OUTDATED_JSON" | python3 -c "
-import sys, json
-data = json.load(sys.stdin)
-data['${app}'] = json.loads('''${FILTERED}''')
-print(json.dumps(data))
-")
+# Merge into the shared report
+with open('/tmp/outdated.json') as f:
+    report = json.load(f)
+
+report[app] = filtered
+
+with open('/tmp/outdated.json', 'w') as f:
+    json.dump(report, f, indent=2)
+PYEOF
 
   echo "::endgroup::"
 done
 
-echo "$OUTDATED_JSON" > /tmp/outdated.json
-echo "Wrote outdated dependency report to /tmp/outdated.json"
+echo "Outdated dependency report:"
 cat /tmp/outdated.json
 
