@@ -16,7 +16,7 @@ HashiCorp Nomad is a simple and flexible container orchestration platform for ma
 
 **Supported Distributions:**
 
-- Ubuntu 22.04 LTS
+- Ubuntu 24.04 LTS
 
 ## Linode Helpers Included
 
@@ -42,7 +42,7 @@ curl -H "Content-Type: application/json" \
     ],
     "backups_enabled": false,
     "booted": true,
-    "image": "linode/ubuntu22.04",
+    "image": "linode/ubuntu24.04",
     "label": "nomad-client-occ",
     "private_ip": true,
     "region": "us-ord",
@@ -68,7 +68,7 @@ linode-cli linodes create \
   --authorized_users user2 \
   --backups_enabled false \
   --booted true \
-  --image 'linode/ubuntu22.04' \
+  --image 'linode/ubuntu24.04' \
   --label nomad-occ \
   --private_ip true \
   --region us-ord \

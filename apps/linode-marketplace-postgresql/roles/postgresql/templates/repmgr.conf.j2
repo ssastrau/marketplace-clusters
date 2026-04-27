@@ -49,7 +49,7 @@ conninfo='host={{conninfo_host}} user=repmgr dbname=repmgr port=5432 connect_tim
 				 #  https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNECT-CONNECT-TIMEOUT
 
 #data_directory=''		 # The node's data directory. This is needed by repmgr
-data_directory='/var/lib/postgresql/14/main/'		 # The node's data directory. This is needed by repmgr
+data_directory='/var/lib/postgresql/16/main/'		 # The node's data directory. This is needed by repmgr
 				 # when performing operations when the PostgreSQL instance
 				 # is not running and there's no other way of determining
 				 # the data directory.
@@ -151,7 +151,7 @@ log_file='/var/log/repmgr/repmgr.log'			 # STDERR can be redirected to an arbitr
 # Environment/command settings
 #------------------------------------------------------------------------------
 
-pg_bindir='/usr/lib/postgresql/14/bin/'				# Path to PostgreSQL binary directory (location
+pg_bindir='/usr/lib/postgresql/16/bin/'				# Path to PostgreSQL binary directory (location
 					# of pg_ctl, pg_basebackup etc.). Only needed
 					# if these files are not in the system $PATH.
 					#

@@ -12,7 +12,7 @@ Our marketplace application allows the deployment of a Kafka cluster using Kafka
 
 ## Distributions
 
-- Ubuntu 22.04 LTS
+- Ubuntu 24.04 LTS
 
 ## Sotware Included
 

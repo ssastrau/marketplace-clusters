@@ -122,51 +122,46 @@
   delegate_to: "{{ groups['redis_primary'][0] }}"
 
 - name: Inserting data into redis
-  community.general.redis_data:
-    login_host: localhost
-    login_password: '{{ redis_password }}'
-    key: replication
-    value: success
-    tls: true
-    ca_certs: '{{ redis_cacert }}'
-    state: present
+  shell:
+    cmd: >-
+      redis-cli --no-auth-warning -a "{{ redis_password }}"
+      --tls --cacert "{{ redis_cacert }}"
+      set replication success
+  register: redis_set
+  changed_when: "'OK' in redis_set.stdout"
+  failed_when: "'OK' not in redis_set.stdout"
+  no_log: true
   run_once: true
   delegate_to: "{{ groups['redis_primary'][0] }}"
 
 # add delay for replication events to occur
-- name: Getting value of key
-  community.general.redis_data_info:
-    login_host: localhost
-    login_password: '{{ redis_password }}'
-    key: replication
-    tls: true
-    ca_certs: '{{ redis_cacert }}'
-  register: rediskey
-  until: rediskey is not failed
-  retries: 3
+- name: Getting value of key on secondaries
+  shell:
+    cmd: >-
+      redis-cli --no-auth-warning -a "{{ redis_password }}"
+      --tls --cacert "{{ redis_cacert }}"
+      get replication
+  register: redis_get
+  until: redis_get.stdout == 'success'
+  retries: 10
   delay: 3
-  changed_when: "rediskey.value != 'success'"
-  failed_when: "rediskey.value != 'success'"
-  run_once: true
-  delegate_to: '{{ item }}'
-  loop: "{{ groups['redis_secondary'] }}"
-
-# asserting might not be neccessary. If the above fails, this will never pass.
-- name: Ensuring key is present on the secondaries
-  assert:
-    that: "{{ rediskey.results[0].value == 'success' }}"
+  changed_when: "false"
+  failed_when: redis_get.stdout != 'success'
+  no_log: true
   run_once: true
   delegate_to: '{{ item }}'
   loop: "{{ groups['redis_secondary'] }}"
 
 # clean up
 - name: Cleaning up and removing test key
-  community.general.redis_data:
-    login_host: localhost
-    login_password: '{{ redis_password }}'
-    key: replication
-    tls: true
-    ca_certs: '{{ redis_cacert }}'
-    state: absent
+  shell:
+    cmd: >-
+      redis-cli --no-auth-warning -a "{{ redis_password }}"
+      --tls --cacert "{{ redis_cacert }}"
+      del replication
+  register: redis_del
+  changed_when: "(redis_del.stdout | int) > 0"
+  failed_when: "(redis_del.stdout | int) < 0"
+  no_log: true
   run_once: true
   delegate_to: "{{ groups['redis_primary'][0] }}"

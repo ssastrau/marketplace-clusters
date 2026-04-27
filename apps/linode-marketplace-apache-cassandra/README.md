@@ -8,7 +8,7 @@ Create a highly available Apache Cassandra cluster through the Linode Marketplac
 - 4.1.5
 
 **Supported Distributions:**
-- Ubuntu 22.04 LTS
+- Ubuntu 24.04 LTS
 
 ## Documentation
 

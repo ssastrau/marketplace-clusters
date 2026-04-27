@@ -7,7 +7,7 @@
 
 - name: Adding redis repository
   apt_repository:
-    repo: deb https://packages.redis.io/deb jammy main
+    repo: deb https://packages.redis.io/deb noble main
     filename: redis
     state: present
 
@@ -20,9 +20,9 @@
     name: '{{ item }}'
     state: present
   loop:
-    - "redis-tools=6:{{ redis_version }}-1rl1~jammy1"
-    - "redis-server=6:{{ redis_version }}-1rl1~jammy1"
-    - "redis-sentinel=6:{{ redis_version }}-1rl1~jammy1"
+    - "redis-tools=6:{{ redis_version }}-1rl1~noble1"
+    - "redis-server=6:{{ redis_version }}-1rl1~noble1"
+    - "redis-sentinel=6:{{ redis_version }}-1rl1~noble1"
 
 - name: Stopping redis services
   systemd:

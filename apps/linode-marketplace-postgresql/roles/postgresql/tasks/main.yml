@@ -3,7 +3,7 @@
 - name: Install firewalld
   import_tasks: firewalld.yml
 
-- name: Install postgresql 14
+- name: Install postgresql 16
   import_tasks: install.yml
 
 - name: Generating psql SSH keypair

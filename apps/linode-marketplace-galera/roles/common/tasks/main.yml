@@ -22,7 +22,7 @@
       - rsync
       - fail2ban
       - python3-pip
-      - python3-mysqldb
+      - python3-pymysql
     state: present
 
 # disable root login w/wo pubkey

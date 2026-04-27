@@ -37,7 +37,7 @@
 
 - name: Adding postgresql repository
   apt_repository:
-    repo: deb http://apt.postgresql.org/pub/repos/apt jammy-pgdg main
+    repo: deb http://apt.postgresql.org/pub/repos/apt noble-pgdg main
     filename: pgdg
     state: present
 
@@ -45,8 +45,8 @@
   apt:
     update_cache: true
 
-- name: Installing postgresql-14 and repmgrd packages
+- name: Installing postgresql-16 and repmgr packages
   apt:
     name: '{{ item }}'
     state: present
-  loop: [postgresql-14, postgresql-14-repmgr]
+  loop: [postgresql-16, postgresql-16-repmgr]

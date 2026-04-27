@@ -1,6 +1,6 @@
 ---
 
-# start service on cluster when cluster_mode is cluster
+# start service on client when cluster_mode is client
 - name: Systemd daemon reload
   systemd:
     daemon_reload: true
@@ -22,7 +22,7 @@
   systemd:
     daemon_reload: true
   delegate_to: '{{ item }}'
-  loop: "{{ groups['nomad_cluster'] }}"
+  loop: "{{ groups['nomad_cluster'] | default([]) }}"
   when: cluster_mode == 'cluster'
 
 - name: Start and enable nomad service
@@ -31,5 +31,5 @@
     state: started
     enabled: true
   delegate_to: '{{ item }}'
-  loop: "{{ groups['nomad_cluster'] }}"
+  loop: "{{ groups['nomad_cluster'] | default([]) }}"
   when: cluster_mode == 'cluster'

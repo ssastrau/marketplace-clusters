@@ -15,7 +15,7 @@ Create a highly available Redis cluster using [Redis Sentinel](https://redis.io/
 
 
 **Supported Distributions:**
-- Ubuntu 22.04 LTS
+- Ubuntu 24.04 LTS
 
 ## Documentation
 

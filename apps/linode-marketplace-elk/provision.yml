@@ -26,7 +26,7 @@
         root_pass: '{{ temp_root_pass }}'
         authorized_keys: '{{ provisioner_ssh_pubkey }}'
         private_ip: true
-        # stackscript_id: 00000
+        stackscript_id: 1967828
         ua_prefix: 'cloud-marketplace-elk'
         tags: '{{ linode_tags }}'
         state: present
