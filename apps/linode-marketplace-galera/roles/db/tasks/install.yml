@@ -41,10 +41,11 @@
 
 - name: Run db queries
   mysql_query:
-    login_user: root
+    login_unix_socket: /var/run/mysqld/mysqld.sock
     query:
       - drop user if exists 'mysql'@'localhost';  # useful for testing if modifying this playbook
       - create user 'mysql'@'localhost' identified via unix_socket;
       - grant reload, lock tables, process, replication client on *.* to 'mysql'@'localhost';
       - flush privileges;
     single_transaction: true
+  become: true

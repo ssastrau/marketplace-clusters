@@ -65,7 +65,7 @@ curl -H "Content-Type: application/json" \
     ],
     "backups_enabled": false,
     "booted": true,
-    "image": "linode/ubuntu22.04",
+    "image": "linode/ubuntu24.04",
     "label": "apache-spark-cluster",
     "private_ip": false,
     "region": "${REGION}",
@@ -94,7 +94,7 @@ linode-cli linodes create \
   --authorized_users yourUser \
   --backups_enabled false \
   --booted true \
-  --image 'linode/ubuntu22.04' \
+  --image 'linode/ubuntu24.04' \
   --label ${LABEL} \
   --private_ip true \
   --region ${REGION} \
