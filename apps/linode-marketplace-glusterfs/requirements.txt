@@ -1,7 +1,7 @@
-wheel==0.46.3
+wheel==0.47.0
 setuptools==82.0.1
-linode-api4==5.42.0
-ansible==13.5.0
+linode-api4==5.43.0
+ansible==13.6.0
 passlib==1.7.4
 polling==0.3.2
 yamllint==1.38.0
