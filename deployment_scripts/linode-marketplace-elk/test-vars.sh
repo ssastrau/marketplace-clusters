@@ -29,12 +29,6 @@ else
         UDF_VARS["DISABLE_ROOT"]="No" # default
 fi
 
-if [[ -n "${ADD_SSH_KEYS}" ]]; then
-        UDF_VARS["ADD_SSH_KEYS"]="${ADD_SSH_KEYS}"
-else
-        UDF_VARS["ADD_SSH_KEYS"]="yes" # default
-fi
-
 if [[ -n "${TOKEN_PASSWORD}" ]]; then
         UDF_VARS["TOKEN_PASSWORD"]="${TOKEN_PASSWORD}"
 elif [[ -n "${LINODE_API_SECRET}" ]]; then

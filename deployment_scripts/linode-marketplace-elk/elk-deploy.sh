@@ -1,4 +1,5 @@
 #!/bin/bash
+# STACKSCRIPT_ID: 1966222
 
 # enable logging
 exec > >(tee /dev/ttyS0 /var/log/stackscript.log) 2>&1
@@ -27,7 +28,6 @@ fi
 #<UDF name="token_password" label="Your Linode API token" />
 #<UDF name="soa_email_address" label="Email address (for the Let's Encrypt SSL certificate)" example="Example: user@example.com">
 #<UDF name="user_name" label="The limited sudo user to be created for the Linode: *No Capital Letters or Special Characters*">
-#<UDF name="add_ssh_keys" label="Add Account SSH Keys to All Nodes?" oneof="yes,no"  default="yes" />
 #<UDF name="disable_root" label="Disable root access over SSH?" oneOf="Yes,No" default="No">
 
 ## Domain Settings
@@ -217,7 +217,6 @@ function provisioner_vars {
   uuid: ${UUID}
   token_password: ${TOKEN_PASSWORD}
   temp_root_pass: ${TEMP_ROOT_PASS}
-  add_ssh_keys: "${ADD_SSH_KEYS}"
 EOF
 }
 
@@ -239,13 +238,6 @@ function udf {
   # Certbot
   soa_email_address: ${SOA_EMAIL_ADDRESS}
 EOF
-
-	if [ "${ADD_SSH_KEYS}" == "yes" ]; then
-		echo "[info] Adding account SSH keys to authorized_keys..."
-		curl -sH "Content-Type: application/json" \
-			-H "Authorization: Bearer ${TOKEN_PASSWORD}" \
-			https://api.linode.com/v4/profile/sshkeys | jq -r .data[].ssh_key >> /root/.ssh/authorized_keys
-	fi
 
 	if [ "$DISABLE_ROOT" = "Yes" ]; then
 		echo "disable_root: yes" >>${group_vars}
