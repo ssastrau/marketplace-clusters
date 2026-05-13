@@ -1,5 +1,5 @@
 ---
-name: Scheduled Workflow
+name: Scheduled Workfl2ow
 on:
   workflow_dispatch:
   schedule:
