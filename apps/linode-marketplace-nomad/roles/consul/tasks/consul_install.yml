@@ -16,16 +16,37 @@
     mode: '0644'
 
 - name: Add HashiCorp repo
-  ansible.builtin.apt_repository:
-    filename: hashicorp
-    repo: >-
+  ansible.builtin.copy:
+    dest: /etc/apt/sources.list.d/hashicorp.list
+    mode: '0644'
+    content: >
       deb [arch={{ ansible_architecture | replace("x86_64", "amd64") | replace("aarch64", "arm64") }}
       signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg]
       https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main
 
+- name: Show hashicorp.list content
+  ansible.builtin.command:
+    cmd: cat /etc/apt/sources.list.d/hashicorp.list
+  register: hashicorp_list
+  changed_when: false
+
+- name: Debug hashicorp.list
+  ansible.builtin.debug:
+    var: hashicorp_list.stdout
+
 - name: Update repos
-  apt:
+  ansible.builtin.apt:
     update_cache: true
+
+- name: List apt lists for HashiCorp
+  ansible.builtin.command:
+    cmd: ls /var/lib/apt/lists/
+  register: apt_lists
+  changed_when: false
+
+- name: Show apt lists for HashiCorp
+  ansible.builtin.debug:
+    msg: "{{ apt_lists.stdout_lines | select('search', 'hashicorp') | list }}"
 
 - name: List available HashiCorp packages
   ansible.builtin.shell: |
