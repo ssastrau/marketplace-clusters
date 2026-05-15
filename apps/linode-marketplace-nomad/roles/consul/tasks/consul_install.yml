@@ -1,19 +1,66 @@
 ---
-- name: Add HashiCorp GPG key
+- name: Download HashiCorp GPG key
   ansible.builtin.get_url:
     url: https://apt.releases.hashicorp.com/gpg
-    dest: /etc/apt/trusted.gpg.d/hashicorp.gpg.asc
+    dest: /tmp/GPG-KEY-hashicorp
     mode: '0644'
-    force: true
+
+- name: Dearmor HashiCorp GPG key
+  ansible.builtin.command:
+    cmd: gpg --dearmor --output /usr/share/keyrings/hashicorp-archive-keyring.gpg /tmp/GPG-KEY-hashicorp
+    creates: /usr/share/keyrings/hashicorp-archive-keyring.gpg
+
+- name: Set keyring permissions
+  ansible.builtin.file:
+    path: /usr/share/keyrings/hashicorp-archive-keyring.gpg
+    mode: '0644'
 
 - name: Add HashiCorp repo
-  ansible.builtin.apt_repository:
-    filename: HashiCorp
-    repo: 'deb [signed-by=/etc/apt/trusted.gpg.d/hashicorp.gpg.asc] https://apt.releases.hashicorp.com noble main'
+  ansible.builtin.copy:
+    dest: /etc/apt/sources.list.d/hashicorp.list
+    mode: '0644'
+    content: >
+      deb [arch={{ ansible_architecture | replace("x86_64", "amd64") | replace("aarch64", "arm64") }}
+      signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg]
+      https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main
+
+- name: Show hashicorp.list content
+  ansible.builtin.command:
+    cmd: cat /etc/apt/sources.list.d/hashicorp.list
+  register: hashicorp_list
+  changed_when: false
+
+- name: Debug hashicorp.list
+  ansible.builtin.debug:
+    var: hashicorp_list.stdout
 
 - name: Update repos
-  apt:
-    update_cache: 'yes'
+  ansible.builtin.apt:
+    update_cache: true
+
+- name: List apt lists for HashiCorp
+  ansible.builtin.command:
+    cmd: ls /var/lib/apt/lists/
+  register: apt_lists
+  changed_when: false
+
+- name: Show apt lists for HashiCorp
+  ansible.builtin.debug:
+    msg: "{{ apt_lists.stdout_lines | select('search', 'hashicorp') | list }}"
+
+- name: List available HashiCorp packages
+  ansible.builtin.shell: |
+    set -o pipefail
+    grep ^Package: /var/lib/apt/lists/apt.releases.hashicorp.com*Packages | sort -u
+  args:
+    executable: /bin/bash
+  register: hashicorp_packages
+  changed_when: false
+  failed_when: false
+
+- name: Show available HashiCorp packages
+  ansible.builtin.debug:
+    var: hashicorp_packages.stdout_lines
 
 - name: Creating consul data dir
   file:
