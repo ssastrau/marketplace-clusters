@@ -10,6 +10,11 @@
     cmd: gpg --dearmor --output /usr/share/keyrings/hashicorp-archive-keyring.gpg /tmp/GPG-KEY-hashicorp
     creates: /usr/share/keyrings/hashicorp-archive-keyring.gpg
 
+- name: Set keyring permissions
+  ansible.builtin.file:
+    path: /usr/share/keyrings/hashicorp-archive-keyring.gpg
+    mode: '0644'
+
 - name: Add HashiCorp repo
   ansible.builtin.apt_repository:
     filename: hashicorp
@@ -30,6 +35,7 @@
     executable: /bin/bash
   register: hashicorp_packages
   changed_when: false
+  failed_when: false
 
 - name: Show available HashiCorp packages
   ansible.builtin.debug:
