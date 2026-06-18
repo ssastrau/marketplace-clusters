@@ -84,24 +84,18 @@
       tls-replication yes
       tls-cluster yes
       # general
-      bind 127.0.0.1 ::1 {{ redis_data.results[count + 1].instance.ip_priv1 }}
+      bind 127.0.0.1 ::1 {{ node_private_ip }}
       masterauth {{ redis_password }}
       protected-mode no
       requirepass {{ redis_password }}
       replicaof {{ redis_data.results[0].instance.ip_priv1 }} 6379
-  run_once: true
-  delegate_to: '{{ item }}'
-  loop: "{{ groups['redis_secondary'] }}"
-  loop_control:
-    index_var: count
+  when: inventory_hostname in groups['redis_secondary']
 
 - name: Starting redis-server on secondaries
   systemd:
     name: redis-server
     state: started
-  run_once: true
-  delegate_to: '{{ item }}'
-  loop: "{{ groups['redis_secondary'] }}"
+  when: inventory_hostname in groups['redis_secondary']
 
 # validation
 - name: Getting redis info
@@ -148,9 +142,7 @@
   changed_when: "false"
   failed_when: redis_get.stdout != 'success'
   no_log: true
-  run_once: true
-  delegate_to: '{{ item }}'
-  loop: "{{ groups['redis_secondary'] }}"
+  when: inventory_hostname in groups['redis_secondary']
 
 # clean up
 - name: Cleaning up and removing test key

@@ -4,24 +4,18 @@
     name: elasticsearch
     state: present
     update_cache: true
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['elasticsearch'] }}"
+  when: inventory_hostname in groups['elasticsearch']
 
 - name: Installing Logstash
   apt:
     name: logstash
     state: present
     update_cache: true
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['logstash'] }}"
+  when: inventory_hostname in groups['logstash']
 
 - name: Installing Kibana
   apt:
     name: kibana
     state: present
     update_cache: true
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['provisioner'] }}"
+  when: inventory_hostname in groups['provisioner']

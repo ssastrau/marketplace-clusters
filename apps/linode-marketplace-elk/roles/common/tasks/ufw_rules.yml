@@ -33,26 +33,22 @@
 - name: Configure UFW for elasticsearch
   ufw:
     rule: allow
-    port: "{{ item.1 }}"
+    port: "{{ item.0 }}"
     proto: tcp
-    src: "{{ item.2 }}"
-  run_once: true
-  delegate_to: "{{ item.0 }}"
-  loop: "{{ groups['elasticsearch'] | product(elasticsearch_ports, elasticsearch_allow) | list }}"
-  loop_control:
-    index_var: count
+    src: "{{ item.1 }}"
+  loop: "{{ elasticsearch_ports | product(elasticsearch_allow) | list }}"
   vars:
     elasticsearch_ports: ["9200", "9300"]
+  when: inventory_hostname in groups['elasticsearch']
 - name: Configure UFW for Logstash
   ufw:
     rule: allow
     port: "5044"
     proto: tcp
     src: "{{ beats_allow }}"
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['logstash'] }}"
-  when: beats_allow is defined
+  when:
+    - inventory_hostname in groups['logstash']
+    - beats_allow is defined
 
 - name: Enable UFW
   ufw:

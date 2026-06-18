@@ -1,34 +1,34 @@
 ---
 # start service on cluster when cluster_mode is client
-- name: Systemd daemon reload
+- name: Systemd daemon reload (client)
   systemd:
     daemon_reload: true
-  delegate_to: '{{ item }}'
-  loop: "{{ groups['nomad_client'] }}"
-  when: cluster_mode == 'client'
+  when:
+    - cluster_mode == 'client'
+    - inventory_hostname in groups['nomad_client']
 
-- name: Start and enable consul service
+- name: Start and enable consul service (client)
   systemd:
     name: consul
     state: started
-    enabled: 'yes'
-  delegate_to: '{{ item }}'
-  loop: "{{ groups['nomad_client'] }}"
-  when: cluster_mode == 'client'
+    enabled: true
+  when:
+    - cluster_mode == 'client'
+    - inventory_hostname in groups['nomad_client']
 
 # start service on cluster when cluster_mode is cluster
-- name: Systemd daemon reload
+- name: Systemd daemon reload (cluster)
   systemd:
     daemon_reload: true
-  delegate_to: '{{ item }}'
-  loop: "{{ groups['nomad_cluster'] }}"
-  when: cluster_mode == 'cluster'
+  when:
+    - cluster_mode == 'cluster'
+    - inventory_hostname in groups['nomad_cluster']
 
-- name: Start and enable consul service
+- name: Start and enable consul service (cluster)
   systemd:
     name: consul
     state: started
-    enabled: 'yes'
-  delegate_to: '{{ item }}'
-  loop: "{{ groups['nomad_cluster'] }}"
-  when: cluster_mode == 'cluster'
+    enabled: true
+  when:
+    - cluster_mode == 'cluster'
+    - inventory_hostname in groups['nomad_cluster']

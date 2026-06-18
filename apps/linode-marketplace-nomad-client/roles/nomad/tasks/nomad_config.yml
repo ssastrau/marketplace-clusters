@@ -13,6 +13,4 @@
     owner: root
     group: root
     mode: '0755'
-  run_once: true
-  delegate_to: '{{ item }}'
-  loop: "{{ groups['nomad_client'] }}"
+  when: cluster_mode == "client"

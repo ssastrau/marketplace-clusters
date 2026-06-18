@@ -39,16 +39,11 @@
       tls-auth-clients optional
       tls-replication yes
       # general
-      bind 127.0.0.1 ::1 {{ redis_data.results[count].instance.ip_priv1 }}
+      bind 127.0.0.1 ::1 {{ node_private_ip }}
       protected-mode no
       daemonize yes
       sentinel monitor mymaster {{ redis_data.results[0].instance.ip_priv1 }} 6379 2
       sentinel auth-pass mymaster {{ redis_password }}
-  run_once: true
-  delegate_to: '{{ item }}'
-  loop: "{{ groups['all'] }}"
-  loop_control:
-    index_var: count
 
 - name: Starting redis-sentinel on primary
   systemd:

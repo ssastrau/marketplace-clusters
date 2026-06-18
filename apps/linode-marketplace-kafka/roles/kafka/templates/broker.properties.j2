@@ -25,7 +25,7 @@ process.roles=broker
 
 # The node id associated with this instance's roles
 
-node.id={{ count + 1 }}
+node.id={{ node_id }}
 
 # The connect string for the controller quorum
 #controller.quorum.voters=1@localhost:9093
@@ -42,7 +42,7 @@ controller.quorum.voters=1@{{ kafka_data.server[0].instance.hostname }}:9093,2@{
 #     listeners = PLAINTEXT://your.host.name:9092
 #listeners=PLAINTEXT://kafka3:9092
 #listeners=SSL://kafka3:9092
-listeners=SSL://{{ kafka_data.server[count].instance.hostname }}:9092
+listeners=SSL://{{ kafka_self.hostname }}:9092
 
 # Name of listener used for communication between brokers.
 #inter.broker.listener.name=PLAINTEXT
@@ -53,7 +53,7 @@ ssl.client.auth=required
 # Listener name, hostname and port the broker will advertise to clients.
 # If not set, it uses the value for "listeners".
 #advertised.listeners=PLAINTEXT://kafka3:9092
-advertised.listeners=SSL://{{ kafka_data.server[count].instance.hostname }}:9092
+advertised.listeners=SSL://{{ kafka_self.hostname }}:9092
 
 # A comma-separated list of the names of the listeners used by the controller.
 # This is required if running in KRaft mode. On a node with `process.roles=broker`, only the first listed listener will be used by the broker.
@@ -141,7 +141,7 @@ log.retention.check.interval.ms=300000
 #### SSL #####
 ssl.truststore.location={{ kafka_ssl_directory }}/truststore/server.truststore.jks
 ssl.truststore.password={{ truststore_password}}
-ssl.keystore.location={{ kafka_ssl_directory }}/keystore/{{ kafka_data.server[count].instance.hostname }}.keystore.jks
+ssl.keystore.location={{ kafka_ssl_directory }}/keystore/{{ kafka_self.hostname }}.keystore.jks
 ssl.keystore.password={{ keystore_password }}
 
 ### log ###

@@ -27,12 +27,7 @@
     owner: kafka
     group: kafka
     mode: '0644'
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['kafka'] }}"
-  loop_control:
-    index_var: count
-  when: hostvars[groups['kafka'][count]].role == 'controller and broker'
+  when: role == 'controller and broker'
 
 # for servers who are brokers only
 - name: Updating kafka config for broker only
@@ -42,12 +37,7 @@
     owner: kafka
     group: kafka
     mode: '0644'
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['kafka'] }}"
-  loop_control:
-    index_var: count
-  when: hostvars[groups['kafka'][count]].role == 'broker only'
+  when: role == 'broker only'
 
 - name: Create kafka cluster uuid
   command:
@@ -65,12 +55,7 @@
       --ignore-formatted
   become: true
   become_user: kafka
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['kafka'] }}"
-  loop_control:
-    index_var: count
-  when: hostvars[groups['kafka'][count]].role == 'controller and broker'
+  when: role == 'controller and broker'
 
 - name: Format data directory broker nodes
   command:
@@ -80,12 +65,7 @@
       -c {{ kafka_config_directory }}/config/kraft/broker.properties
   become: true
   become_user: kafka
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['kafka'] }}"
-  loop_control:
-    index_var: count
-  when: hostvars[groups['kafka'][count]].role == 'broker only'
+  when: role == 'broker only'
 
 - name: Starting kafka
   systemd:

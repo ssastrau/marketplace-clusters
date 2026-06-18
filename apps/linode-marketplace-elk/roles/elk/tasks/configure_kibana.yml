@@ -7,9 +7,7 @@
     owner: kibana
     group: kibana
     mode: '0644'
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['provisioner'] }}"
+  when: inventory_hostname in groups['provisioner']
 
 - name: Generate Kibana encryption keys
   shell:
@@ -28,17 +26,11 @@
     group: kibana
     mode: '0644'
     trim_blocks: false
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['provisioner'] }}"
-  loop_control:
-    index_var: count
+  when: inventory_hostname in groups['provisioner']
 
 - name: Restart Kibana
   systemd_service:
     name: kibana
     state: restarted
     enabled: true
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['provisioner'] }}"
+  when: inventory_hostname in groups['provisioner']

@@ -10,12 +10,26 @@
       {{ kafka_data.server[count].instance.ip_priv1 }} {{ kafka_data.server[count].instance.hostname }}
       {%- endfor %}
 
+# Each node identifies itself by the private IP on its own NIC, then looks up
+# its entry in kafka_data. Replaces the run_once + delegate_to: "{{ item }}"
+# + loop idiom, which collapsed onto the provisioner on newer ansible-core.
+- name: Determine this node's private IP
+  set_fact:
+    node_private_ip: "{{ ansible_all_ipv4_addresses | select('match', '^(10\\.|192\\.168\\.|172\\.(1[6-9]|2[0-9]|3[01])\\.)') | first }}"
+
+- name: Identify this node's entry in the cluster topology
+  set_fact:
+    kafka_self: "{{ kafka_data.server | map(attribute='instance') | selectattr('ip_priv1', 'equalto', node_private_ip) | first }}"
+    node_id: "{{ (kafka_data.server | map(attribute='instance.ip_priv1') | list).index(node_private_ip) + 1 }}"
+
+- name: Verify this node was matched in the cluster topology
+  assert:
+    that:
+      - kafka_self is defined
+      - kafka_self.ip_priv1 == node_private_ip
+    fail_msg: "Could not match this node's private IP {{ node_private_ip }} to any kafka_data.server entry"
+
 - name: Configure hostnames
   hostname:
     use: systemd
-    name: "{{ kafka_data.server[count].instance.hostname }}"
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['kafka'] }}"
-  loop_control:
-    index_var: count
+    name: "{{ kafka_self.hostname }}"

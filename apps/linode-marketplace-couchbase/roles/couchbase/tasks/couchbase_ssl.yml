@@ -60,6 +60,15 @@
   register: ca_pem
 # test custom certs -> validate AKI and SKI details.
 # each individual node needs its own priv key. this includes provisioner
+
+# Determine this node's own private IP from its NIC. Each node generates its
+# own key/csr/cert below; previously the csr task used delegate_to + loop,
+# which collapsed onto the provisioner on newer ansible-core and left the
+# other nodes without a csr.
+- name: Determine this node's private IP
+  set_fact:
+    node_private_ip: "{{ ansible_all_ipv4_addresses | select('match', '^(10\\.|192\\.168\\.|172\\.(1[6-9]|2[0-9]|3[01])\\.)') | first }}"
+
 - name: Generate private keys for nodes
   community.crypto.openssl_privatekey:
     path: '{{ ssl_dir }}/pkey.key'
@@ -77,11 +86,7 @@
     key_usage:
       - "digitalSignature"
       - "keyEncipherment"
-    subject_alt_name: "IP:{{ couchbase_data.server[count].instance.ip_priv1 }}"
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['couchbase_cluster'] }}"
-  loop_control:
-    index_var: count
+    subject_alt_name: "IP:{{ node_private_ip }}"
 
 - name: Generate certs for nodes
   community.crypto.x509_certificate:

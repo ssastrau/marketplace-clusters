@@ -22,7 +22,7 @@ cluster.name: {{ cluster_name }}
 # Use a descriptive name for the node:
 #
 #node.name: node-1
-node.name: {{ data.elasticsearch[count].instance.hostname }}
+node.name: {{ elk_self.hostname }}
 #
 # Add custom attributes to the node:
 #
@@ -98,8 +98,8 @@ xpack.security.enrollment.enabled: true
 # Enable encryption for HTTP API client connections, such as Kibana, Logstash, and Agents
 xpack.security.http.ssl:
   enabled: true
-  key: {{ elasticsearch_ssl_directory }}/{{ data.elasticsearch[count].instance.hostname }}.key
-  certificate: {{ elasticsearch_ssl_directory }}/{{ data.elasticsearch[count].instance.hostname }}.crt
+  key: {{ elasticsearch_ssl_directory }}/{{ elk_self.hostname }}.key
+  certificate: {{ elasticsearch_ssl_directory }}/{{ elk_self.hostname }}.crt
   certificate_authorities: ["certs/ca.crt"]
   client_authentication: required
   verification_mode: certificate
@@ -108,8 +108,8 @@ xpack.security.http.ssl:
 xpack.security.transport.ssl:
   enabled: true
   verification_mode: certificate
-  key: {{ elasticsearch_ssl_directory }}/{{ data.elasticsearch[count].instance.hostname }}.key
-  certificate: {{ elasticsearch_ssl_directory }}/{{ data.elasticsearch[count].instance.hostname }}.crt
+  key: {{ elasticsearch_ssl_directory }}/{{ elk_self.hostname }}.key
+  certificate: {{ elasticsearch_ssl_directory }}/{{ elk_self.hostname }}.crt
   certificate_authorities: ["certs/ca.crt"]  
 
 # Create a new cluster with the current node only
@@ -121,12 +121,12 @@ cluster.initial_master_nodes: {{ elasticsearch_hosts }}
 # Connections are encrypted and require user authentication
 #http.host: 0.0.0.0
 #http.host: 192.168.152.177
-http.host: {{ data.elasticsearch[count].instance.ip_priv1 }}
+http.host: {{ elk_self.ip_priv1 }}
 
 # Allow other nodes to join the cluster from anywhere
 # Connections are encrypted and mutually authenticated
 #transport.host: 0.0.0.0
 #transport.host: 0.0.0.0
-transport.host: {{ data.elasticsearch[count].instance.ip_priv1 }}
+transport.host: {{ elk_self.ip_priv1 }}
 
 #----------------------- END SECURITY AUTO CONFIGURATION -------------------------

@@ -1,14 +1,30 @@
 ---
 # roles/common/tasks
-- name: Configure hostnames for client nodes
+# Each node identifies itself by the private IP on its own NIC, then looks up
+# its entry in nomad_data. Replaces the run_once + delegate_to: "{{ item }}"
+# + loop idiom, which collapsed onto the provisioner on newer ansible-core.
+- name: Determine this node's private IP
+  set_fact:
+    node_private_ip: "{{ ansible_all_ipv4_addresses | select('match', '^(10\\.|192\\.168\\.|172\\.(1[6-9]|2[0-9]|3[01])\\.)') | first }}"
+
+- name: Identify this node's entry in the cluster topology
+  set_fact:
+    nomad_self: >-
+      {{ ((nomad_data.server | default([])) + (nomad_data.client | default([])))
+      | map(attribute='instance')
+      | selectattr('ip_priv1', 'equalto', node_private_ip) | first }}
+
+- name: Verify this node was matched in the cluster topology
+  assert:
+    that:
+      - nomad_self is defined
+      - nomad_self.ip_priv1 == node_private_ip
+    fail_msg: "Could not match this node's private IP {{ node_private_ip }} to any nomad_data entry"
+
+- name: Configure hostnames
   hostname:
     use: systemd
-    name: '{{ nomad_data.client[count].instance.hostname }}'
-  run_once: true
-  delegate_to: '{{ item }}'
-  loop: "{{ groups['nomad_client'] }}"
-  loop_control:
-    index_var: count
+    name: '{{ nomad_self.hostname }}'
 
 - name: Update /etc/hosts on all of the nodes
   blockinfile:

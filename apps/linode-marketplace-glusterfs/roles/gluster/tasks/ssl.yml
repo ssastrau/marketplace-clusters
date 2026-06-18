@@ -22,9 +22,6 @@
     content: |
       {{ dhparampem['content'] | b64decode }}
     mode: '0644'
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['gluster_servers'] }}"
 
 - name: Generate private key for gluster
   community.crypto.openssl_privatekey:
@@ -41,12 +38,7 @@
   community.crypto.openssl_csr:
     path: "{{ ssl_directory }}/glusterfs.csr"
     privatekey_path: "{{ ssl_directory }}/glusterfs.key"
-    common_name: '{{ gluster_data.server[count].instance.hostname }}'
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['gluster_servers'] }}"
-  loop_control:
-    index_var: count
+    common_name: '{{ gluster_self.hostname }}'
 
 - name: Generate csr for clients
   community.crypto.openssl_csr:
@@ -74,13 +66,10 @@
   delegate_to: "localhost"
   when: client_ips is defined
 
-- name: Get gluster certs for ca
+- name: Slurp this node's gluster cert
   slurp:
     src: "{{ ssl_directory }}/glusterfs.pem"
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['gluster_servers'] }}"
-  register: glustercerts
+  register: my_gluster_cert
 
 - name: Get client certs for ca
   slurp:
@@ -108,10 +97,8 @@
     create: true
     mode: '0644'
     line: |
-      {{ item.content | b64decode }}
-  loop: "{{ glustercerts.results }}"
-  loop_control:
-    index_var: count
+      {{ hostvars[item].my_gluster_cert.content | b64decode }}
+  loop: "{{ groups['gluster_servers'] }}"
 
 - name: Write client certs to ca
   lineinfile:

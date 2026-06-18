@@ -760,7 +760,7 @@ storage_port: 7000
 #
 # Setting listen_address to 0.0.0.0 is always wrong.
 #
-listen_address: {{ cassandra_data.server[count].instance.ip_priv1 }}
+listen_address: {{ cassandra_self.ip_priv1 }}
 
 # Set listen_address OR listen_interface, not both. Interfaces must correspond
 # to a single address, IP aliasing is not supported.
@@ -856,7 +856,7 @@ native_transport_allow_older_protocols: true
 # set broadcast_rpc_address to a value other than 0.0.0.0.
 #
 # For security reasons, you should not expose this port to the internet.  Firewall it if needed.
-rpc_address: {{ cassandra_data.server[count].instance.ip_priv1 }}
+rpc_address: {{ cassandra_self.ip_priv1 }}
 
 # Set rpc_address OR rpc_interface, not both. Interfaces must correspond
 # to a single address, IP aliasing is not supported.
@@ -1328,7 +1328,7 @@ server_encryption_options:
   # during upgrade to 4.0; otherwise, set to false.
   legacy_ssl_storage_port_enabled: false
   # Set to a valid keystore if internode_encryption is dc, rack or all
-  keystore: {{ cassandra_ssl_keystore_directory }}/{{ cassandra_data.server[count].instance.hostname }}-keystore.jks
+  keystore: {{ cassandra_ssl_keystore_directory }}/{{ cassandra_self.hostname }}-keystore.jks
   keystore_password: {{ keystore_password }}
   # Configure the way Cassandra creates SSL contexts.
   # To use PEM-based key material, see org.apache.cassandra.security.PEMBasedSslContextFactory
@@ -1372,7 +1372,7 @@ client_encryption_options:
   # optional defaults to true when enabled is false, and false when enabled is true.
   optional: false
   # Set keystore and keystore_password to valid keystores if enabled is true
-  keystore: {{ cassandra_ssl_keystore_directory }}/{{ cassandra_data.server[count].instance.hostname }}-keystore.jks
+  keystore: {{ cassandra_ssl_keystore_directory }}/{{ cassandra_self.hostname }}-keystore.jks
   keystore_password: {{ keystore_password }}
   # Configure the way Cassandra creates SSL contexts.
   # To use PEM-based key material, see org.apache.cassandra.security.PEMBasedSslContextFactory
