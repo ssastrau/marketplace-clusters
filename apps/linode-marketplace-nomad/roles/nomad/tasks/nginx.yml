@@ -1,7 +1,7 @@
 ---
 - name: Setting RDNS
   set_fact:
-    rdns: "{{ lookup('community.general.dig', '{{ nomad_data.server[0].instance.ip_pub1 }}/PTR')[:-1] }}"
+    rdns: "{{ nomad_data.server[0].instance.ip_pub1 | replace('.', '-') }}.ip.linodeusercontent.com"
 
 - name: Install nginx & certbot
   apt:

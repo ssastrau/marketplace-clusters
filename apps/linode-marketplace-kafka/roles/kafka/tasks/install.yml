@@ -36,40 +36,15 @@
     owner: kafka
     group: kafka
 
-- name: Set fact for servers who are broker and controller
+# Each node sets its own role facts from its own inventory `role`, then writes
+# its own service file. Replaces the run_once + delegate_to + loop idiom.
+- name: Set kafka role facts for this node
   set_fact:
-    myrole: 'broker and controller'
-    server_properties: /etc/kafka/config/kraft/server.properties
-  run_once: true
-  delegate_to: localhost
+    myrole: "{{ 'broker and controller' if role == 'controller and broker' else 'broker' }}"
+    server_properties: "{{ '/etc/kafka/config/kraft/server.properties' if role == 'controller and broker' else '/etc/kafka/config/kraft/broker.properties' }}"
 
-- name: Add kafka systemd service file for broker and controller
+- name: Add kafka systemd service file
   template:
     src: templates/kafka.service.j2
     dest: /lib/systemd/system/kafka.service
     mode: '0644'
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['kafka'] }}"
-  loop_control:
-    index_var: count
-  when: hostvars[groups['kafka'][count]].role == 'controller and broker'
-
-- name: Set fact for broker only
-  set_fact:
-    myrole: broker
-    server_properties: /etc/kafka/config/kraft/broker.properties
-  run_once: true
-  delegate_to: localhost
-
-- name: Add kafka systemd service file for brokers
-  template:
-    src: templates/kafka.service.j2
-    dest: /lib/systemd/system/kafka.service
-    mode: '0644'
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['kafka'] }}"
-  loop_control:
-    index_var: count
-  when: hostvars[groups['kafka'][count]].role == 'broker only'

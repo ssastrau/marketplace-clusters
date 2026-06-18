@@ -1,74 +1,59 @@
 ---
 
-# Create cert directory in cluster
+# Create cert directory in cluster. Each node acts on itself (guarded by group
+# membership) instead of the run_once + delegate_to: "{{ item }}" + loop idiom,
+# which collapsed onto the provisioner on newer ansible-core. Cert files are
+# read from the control node (provisioner) where ssl.yml generated them.
 - name: Create Elasticsearch ssl directory
   file:
     path: "{{ elasticsearch_ssl_directory }}"
     state: directory
     mode: '0755'
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['elasticsearch'] }}"
+  when: inventory_hostname in groups['elasticsearch']
 
 - name: Create Logstsh ssl directory
   file:
     path: "{{ logstash_ssl_directory }}"
     state: directory
     mode: '0755'
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['logstash'] }}"
+  when: inventory_hostname in groups['logstash']
 
 - name: Create Kibana ssl directory
   file:
     path: "{{ kibana_ssl_directory }}"
     state: directory
     mode: '0755'
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['provisioner'] }}"
+  when: inventory_hostname in groups['provisioner']
 
 # Copy over certs to cluster
 
 # Elasticsearch
 - name: Copy Elasticsearch cert
   copy:
-    src: "{{ cluster_ssl_directory }}/{{ data.elasticsearch[count].instance.hostname }}/{{ data.elasticsearch[count].instance.hostname }}.crt"
-    dest: "{{ elasticsearch_ssl_directory }}/{{ data.elasticsearch[count].instance.hostname }}.crt"
+    src: "{{ cluster_ssl_directory }}/{{ elk_self.hostname }}/{{ elk_self.hostname }}.crt"
+    dest: "{{ elasticsearch_ssl_directory }}/{{ elk_self.hostname }}.crt"
     owner: elasticsearch
     group: elasticsearch
     mode: '0664'
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['elasticsearch'] }}"
-  loop_control:
-    index_var: count
+  when: inventory_hostname in groups['elasticsearch']
 
 - name: Copy Elasticsearch key
   copy:
-    src: "{{ cluster_ssl_directory }}/{{ data.elasticsearch[count].instance.hostname }}/{{ data.elasticsearch[count].instance.hostname }}.key"
-    dest: "{{ elasticsearch_ssl_directory }}/{{ data.elasticsearch[count].instance.hostname }}.key"
+    src: "{{ cluster_ssl_directory }}/{{ elk_self.hostname }}/{{ elk_self.hostname }}.key"
+    dest: "{{ elasticsearch_ssl_directory }}/{{ elk_self.hostname }}.key"
     owner: elasticsearch
     group: elasticsearch
     mode: '0600'
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['elasticsearch'] }}"
-  loop_control:
-    index_var: count
+  when: inventory_hostname in groups['elasticsearch']
 
 - name: Copy Elasticsearch CSR
   copy:
-    src: "{{ cluster_ssl_directory }}/{{ data.elasticsearch[count].instance.hostname }}/{{ data.elasticsearch[count].instance.hostname }}.csr"
-    dest: "{{ elasticsearch_ssl_directory }}/{{ data.elasticsearch[count].instance.hostname }}.csr"
+    src: "{{ cluster_ssl_directory }}/{{ elk_self.hostname }}/{{ elk_self.hostname }}.csr"
+    dest: "{{ elasticsearch_ssl_directory }}/{{ elk_self.hostname }}.csr"
     owner: elasticsearch
     group: elasticsearch
     mode: '0664'
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['elasticsearch'] }}"
-  loop_control:
-    index_var: count
+  when: inventory_hostname in groups['elasticsearch']
 
 - name: Copy over CA to Elasticsearch host
   copy:
@@ -77,49 +62,35 @@
     owner: elasticsearch
     group: elasticsearch
     mode: '0664'
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['elasticsearch'] }}"
+  when: inventory_hostname in groups['elasticsearch']
 
 # Logstash
 - name: Copy Logstash cert
   copy:
-    src: "{{ cluster_ssl_directory }}/{{ data.logstash[count].instance.hostname }}/{{ data.logstash[count].instance.hostname }}.crt"
-    dest: "{{ logstash_ssl_directory }}/{{ data.logstash[count].instance.hostname }}.crt"
+    src: "{{ cluster_ssl_directory }}/{{ elk_self.hostname }}/{{ elk_self.hostname }}.crt"
+    dest: "{{ logstash_ssl_directory }}/{{ elk_self.hostname }}.crt"
     owner: logstash
     group: logstash
     mode: '0664'
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['logstash'] }}"
-  loop_control:
-    index_var: count
+  when: inventory_hostname in groups['logstash']
 
 - name: Copy Logstash key
   copy:
-    src: "{{ cluster_ssl_directory }}/{{ data.logstash[count].instance.hostname }}/{{ data.logstash[count].instance.hostname }}.key"
-    dest: "{{ logstash_ssl_directory }}/{{ data.logstash[count].instance.hostname }}.key"
+    src: "{{ cluster_ssl_directory }}/{{ elk_self.hostname }}/{{ elk_self.hostname }}.key"
+    dest: "{{ logstash_ssl_directory }}/{{ elk_self.hostname }}.key"
     owner: logstash
     group: logstash
     mode: '0600'
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['logstash'] }}"
-  loop_control:
-    index_var: count
+  when: inventory_hostname in groups['logstash']
 
 - name: Copy Logstash CSR
   copy:
-    src: "{{ cluster_ssl_directory }}/{{ data.logstash[count].instance.hostname }}/{{ data.logstash[count].instance.hostname }}.csr"
-    dest: "{{ logstash_ssl_directory }}/{{ data.logstash[count].instance.hostname }}.csr"
+    src: "{{ cluster_ssl_directory }}/{{ elk_self.hostname }}/{{ elk_self.hostname }}.csr"
+    dest: "{{ logstash_ssl_directory }}/{{ elk_self.hostname }}.csr"
     owner: logstash
     group: logstash
     mode: '0664'
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['logstash'] }}"
-  loop_control:
-    index_var: count
+  when: inventory_hostname in groups['logstash']
 
 - name: Copy over CA to Logstash host
   copy:
@@ -128,50 +99,36 @@
     owner: logstash
     group: logstash
     mode: '0664'
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['logstash'] }}"
+  when: inventory_hostname in groups['logstash']
 
 # Kibana
 
 - name: Copy Kibana cert
   copy:
-    src: "{{ cluster_ssl_directory }}/{{ data.kibana[count].instance.hostname }}/{{ data.kibana[count].instance.hostname }}.crt"
-    dest: "{{ kibana_ssl_directory }}/{{ data.kibana[count].instance.hostname }}.crt"
+    src: "{{ cluster_ssl_directory }}/{{ elk_self.hostname }}/{{ elk_self.hostname }}.crt"
+    dest: "{{ kibana_ssl_directory }}/{{ elk_self.hostname }}.crt"
     owner: kibana
     group: kibana
     mode: '0664'
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['provisioner'] }}"
-  loop_control:
-    index_var: count
+  when: inventory_hostname in groups['provisioner']
 
 - name: Copy Kibana key
   copy:
-    src: "{{ cluster_ssl_directory }}/{{ data.kibana[count].instance.hostname }}/{{ data.kibana[count].instance.hostname }}.key"
-    dest: "{{ kibana_ssl_directory }}/{{ data.kibana[count].instance.hostname }}.key"
+    src: "{{ cluster_ssl_directory }}/{{ elk_self.hostname }}/{{ elk_self.hostname }}.key"
+    dest: "{{ kibana_ssl_directory }}/{{ elk_self.hostname }}.key"
     owner: kibana
     group: kibana
     mode: '0600'
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['provisioner'] }}"
-  loop_control:
-    index_var: count
+  when: inventory_hostname in groups['provisioner']
 
 - name: Copy Kibana CSR
   copy:
-    src: "{{ cluster_ssl_directory }}/{{ data.kibana[count].instance.hostname }}/{{ data.kibana[count].instance.hostname }}.csr"
-    dest: "{{ kibana_ssl_directory }}/{{ data.kibana[count].instance.hostname }}.csr"
+    src: "{{ cluster_ssl_directory }}/{{ elk_self.hostname }}/{{ elk_self.hostname }}.csr"
+    dest: "{{ kibana_ssl_directory }}/{{ elk_self.hostname }}.csr"
     owner: kibana
     group: kibana
     mode: '0664'
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['provisioner'] }}"
-  loop_control:
-    index_var: count
+  when: inventory_hostname in groups['provisioner']
 
 - name: Copy over CA to Kibana host
   copy:
@@ -180,6 +137,4 @@
     owner: kibana
     group: kibana
     mode: '0664'
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['provisioner'] }}"
+  when: inventory_hostname in groups['provisioner']

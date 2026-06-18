@@ -4,25 +4,32 @@
   set_fact:
     jvb_count: '{{ cluster_size - jitsi_count }}'
 
-- name: Configure hostnames on jitsi servers
-  hostname:
-    use: systemd
-    name: "{{ jitsi_data.results.jitsi[count].instance.hostname }}"
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['jitsi_servers'] }}"
-  loop_control:
-    index_var: count
+# Each node identifies itself by the private IP on its own NIC, then looks up
+# its entry across jitsi_data.results.jitsi / .jvb. Replaces the run_once +
+# delegate_to: "{{ item }}" + loop idiom, which collapsed onto the provisioner
+# on newer ansible-core.
+- name: Determine this node's private IP
+  set_fact:
+    node_private_ip: "{{ ansible_all_ipv4_addresses | select('match', '^(10\\.|192\\.168\\.|172\\.(1[6-9]|2[0-9]|3[01])\\.)') | first }}"
 
-- name: Configure hostnames on JVB servers
+- name: Identify this node's entry in the cluster topology
+  set_fact:
+    jitsi_self: >-
+      {{ (jitsi_data.results.jitsi + jitsi_data.results.jvb)
+      | map(attribute='instance')
+      | selectattr('ip_priv1', 'equalto', node_private_ip) | first }}
+
+- name: Verify this node was matched in the cluster topology
+  assert:
+    that:
+      - jitsi_self is defined
+      - jitsi_self.ip_priv1 == node_private_ip
+    fail_msg: "Could not match this node's private IP {{ node_private_ip }} to any jitsi_data entry"
+
+- name: Configure hostnames
   hostname:
     use: systemd
-    name: "{{ jitsi_data.results.jvb[count].instance.hostname }}"
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['jvb_servers'] }}"
-  loop_control:
-    index_var: count
+    name: "{{ jitsi_self.hostname }}"
 
 - name: Update /etc/hosts on all of the nodes
   blockinfile:

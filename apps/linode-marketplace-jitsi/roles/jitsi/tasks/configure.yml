@@ -1,5 +1,10 @@
 ---
 # roles/jitsi/tasks/configure.yml
+# Tasks run per-host, guarded by group membership, instead of the run_once +
+# delegate_to: "{{ item }}" + loop idiom (which collapsed onto the provisioner
+# on newer ansible-core). Each JVB uses its own hostname (jitsi_self.hostname,
+# e.g. "jvb2") where the old code used "jvb{{ count + 1 }}". Inner
+# "for count in range(jvb_count)" loops are local and iterate all JVBs.
 - name: Set jvb conf var
   set_fact:
     nginx_conf: "/etc/nginx/sites-enabled/{{ _domain }}.conf"
@@ -13,9 +18,7 @@
   systemd:
     name: jitsi-videobridge2
     state: stopped
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['jvb_servers'] }}"
+  when: inventory_hostname in groups['jvb_servers']
 
 # update jvb.conf (HOCON format, used since jitsi-videobridge2 2.3+)
 - name: Update XMPP hostname in jvb.conf
@@ -23,20 +26,14 @@
     path: "{{ jvb_conf }}"
     regexp: '^\s*hostname\s*=.*'
     line: "        hostname = \"{{ jitsi_data.results.jitsi[0].instance.ip_priv1 }}\""
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['jvb_servers'] }}"
+  when: inventory_hostname in groups['jvb_servers']
 
 - name: Update MUC nickname in jvb.conf
   lineinfile:
     path: "{{ jvb_conf }}"
     regexp: '^\s*muc-nickname\s*=.*'
-    line: "        muc-nickname = \"jvb{{ count + 1 }}\""
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['jvb_servers'] }}"
-  loop_control:
-    index_var: count
+    line: "        muc-nickname = \"{{ jitsi_self.hostname }}\""
+  when: inventory_hostname in groups['jvb_servers']
 
 - name: Disable certificate verification in jvb.conf
   blockinfile:
@@ -44,18 +41,14 @@
     marker: "        # {mark} ANSIBLE MANAGED - cert-verify"
     insertafter: '^\s*muc-nickname\s*=.*'
     block: "        disable-certificate-verification = true"
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['jvb_servers'] }}"
+  when: inventory_hostname in groups['jvb_servers']
 
 # update nginx conf
 - name: Validating jvb upstream marker
   slurp:
     src: "{{ nginx_conf }}"
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['jitsi_servers'] }}"
   register: jvbupstream
+  when: inventory_hostname in groups['jitsi_servers']
 
 - name: Replace nginx jvb upstream (1/2)
   replace:
@@ -70,10 +63,9 @@
         keepalive 2;
       }{%- endfor %}
       # END UPSTREAM
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['jitsi_servers'] }}"
-  when: "'# BEGIN UPSTREAM' not in jvbupstream.results[0].content | b64decode"
+  when:
+    - inventory_hostname in groups['jitsi_servers']
+    - "'# BEGIN UPSTREAM' not in jvbupstream.content | b64decode"
 
 - name: Replace nginx jvb upstream (2/2)
   blockinfile:
@@ -87,18 +79,15 @@
         server {{ jitsi_data.results.jvb[count].instance.ip_priv1 }}:9090;
         keepalive 2;
       }{%- endfor %}
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['jitsi_servers'] }}"
-  when: "'# BEGIN UPSTREAM' in jvbupstream.results[0].content | b64decode"
+  when:
+    - inventory_hostname in groups['jitsi_servers']
+    - "'# BEGIN UPSTREAM' in jvbupstream.content | b64decode"
 
 - name: Validating colibri-ws marker
   slurp:
     src: "{{ nginx_conf }}"
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['jitsi_servers'] }}"
   register: colibriws
+  when: inventory_hostname in groups['jitsi_servers']
 
 - name: Update colibri-ws location with correct jvb upstream (1/2)
   replace:
@@ -115,10 +104,9 @@
             tcp_nodelay on;
           }{%- endfor %}
           # END COLIBRI-WS
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['jitsi_servers'] }}"
-  when: "'# BEGIN COLIBRI-WS' not in colibriws.results[0].content | b64decode"
+  when:
+    - inventory_hostname in groups['jitsi_servers']
+    - "'# BEGIN COLIBRI-WS' not in colibriws.content | b64decode"
 
 - name: Update colibri-ws location with correct jvb upstream (2/2)
   blockinfile:
@@ -134,22 +122,17 @@
             proxy_set_header Connection "upgrade";
             tcp_nodelay on;
           }{%- endfor %}
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['jitsi_servers'] }}"
-  when: "'# BEGIN COLIBRI-WS' in colibriws.results[0].content | b64decode"
+  when:
+    - inventory_hostname in groups['jitsi_servers']
+    - "'# BEGIN COLIBRI-WS' in colibriws.content | b64decode"
 
 - name: Add server-id to JVBs
   lineinfile:
     path: "{{ jvb_conf }}"
     regexp: '^\s*server-id\s*=.*'
-    line: "        server-id = jvb{{ count + 1 }}"
+    line: "        server-id = {{ jitsi_self.hostname }}"
     insertafter: '^\s*muc-nickname\s*=.*'
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['jvb_servers'] }}"
-  loop_control:
-    index_var: count
+  when: inventory_hostname in groups['jvb_servers']
 
 - name: Enabling videobridge relay
   blockinfile:
@@ -160,13 +143,9 @@
             relay {
                 enabled = true
                 region = "{{ region }}"
-                relay-id = "jvb{{ count + 1 }}"
+                relay-id = "{{ jitsi_self.hostname }}"
             }
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['jvb_servers'] }}"
-  loop_control:
-    index_var: count
+  when: inventory_hostname in groups['jvb_servers']
 
 # jicofo update
 - name: Splitting the traffic between bridges
@@ -175,9 +154,7 @@
     regexp: '^\s*selection-strategy\s*=.*'
     line: "    selection-strategy = SplitBridgeSelectionStrategy"
     insertafter: 'brewery-jid'
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['jitsi_servers'] }}"
+  when: inventory_hostname in groups['jitsi_servers']
 
 - name: Enable octo in jicofo
   blockinfile:
@@ -188,47 +165,35 @@
         octo: {
           enabled = true
         }
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['jitsi_servers'] }}"
+  when: inventory_hostname in groups['jitsi_servers']
 
 # restart services
 - name: Restart nginx service on jitsi meet server
   systemd:
     name: nginx
     state: restarted
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['jitsi_servers'] }}"
+  when: inventory_hostname in groups['jitsi_servers']
 
 - name: Restart prosody service on jitsi meet server
   systemd:
     name: prosody
     state: restarted
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['jitsi_servers'] }}"
+  when: inventory_hostname in groups['jitsi_servers']
 
 - name: Restart jicofo service on jitsi meet server
   systemd:
     name: jicofo
     state: restarted
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['jitsi_servers'] }}"
+  when: inventory_hostname in groups['jitsi_servers']
 
 - name: Starting jitsi-videobridge2 service on jvb
   systemd:
     name: jitsi-videobridge2
     state: restarted
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['jvb_servers'] }}"
+  when: inventory_hostname in groups['jvb_servers']
 
 - name: Disable jitsi-videobridge2 service on jitsi server
   systemd:
     name: jitsi-videobridge2
     enabled: false
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['jitsi_servers'] }}"
+  when: inventory_hostname in groups['jitsi_servers']

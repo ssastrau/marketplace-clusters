@@ -1,14 +1,27 @@
 ---
 # roles/redis-sentinel/tasks/hostname.yml
+# Each node identifies itself by the private IP on its own NIC, then looks up
+# its entry in redis_data. Replaces the run_once + delegate_to: "{{ item }}"
+# + loop idiom, which collapsed onto the provisioner on newer ansible-core.
+- name: Determine this node's private IP
+  set_fact:
+    node_private_ip: "{{ ansible_all_ipv4_addresses | select('match', '^(10\\.|192\\.168\\.|172\\.(1[6-9]|2[0-9]|3[01])\\.)') | first }}"
+
+- name: Identify this node's entry in the cluster topology
+  set_fact:
+    redis_self: "{{ redis_data.results | map(attribute='instance') | selectattr('ip_priv1', 'equalto', node_private_ip) | first }}"
+
+- name: Verify this node was matched in the cluster topology
+  assert:
+    that:
+      - redis_self is defined
+      - redis_self.ip_priv1 == node_private_ip
+    fail_msg: "Could not match this node's private IP {{ node_private_ip }} to any redis_data.results entry"
+
 - name: Configure hostnames
   hostname:
     use: systemd
-    name: '{{ redis_data.results[count].instance.hostname }}'
-  run_once: true
-  delegate_to: '{{ item }}'
-  loop: "{{ groups['all'] }}"
-  loop_control:
-    index_var: count
+    name: '{{ redis_self.hostname }}'
 
 - name: Update /etc/hosts on all of the nodes
   blockinfile:

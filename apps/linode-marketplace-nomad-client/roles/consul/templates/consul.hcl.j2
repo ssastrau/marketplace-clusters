@@ -3,7 +3,7 @@ log_level = "INFO"
 data_dir = "/opt/consul/data"
 bind_addr = "0.0.0.0"
 client_addr = "0.0.0.0"
-advertise_addr = "{{ nomad_data.client[count].instance.ip_priv1 }}"
+advertise_addr = "{{ node_private_ip }}"
 retry_join = ["provider=linode api_token={{ api_token }} region={{ region }} tag_name={{ cluster_uuid }}"]
 
 acl {

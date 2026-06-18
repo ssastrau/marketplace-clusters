@@ -33,9 +33,7 @@
     port: '9090'
     proto: tcp
     from_ip: '{{ jitsi_data.results.jitsi.0.instance.ip_priv1 }}'
-  run_once: true
-  delegate_to: '{{ item }}'
-  loop: "{{ groups['jvb_servers'] }}"
+  when: inventory_hostname in groups['jvb_servers']
 
 # jvbs connect on this port to jitsi instance on public interface
 - name: Allow private access to tcp port 5222 to jvb

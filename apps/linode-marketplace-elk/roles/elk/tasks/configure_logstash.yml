@@ -7,9 +7,7 @@
     owner: logstash
     group: logstash
     mode: '0644'
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['logstash'] }}"
+  when: inventory_hostname in groups['logstash']
 
 - name: Update Logstash config (1/2)
   lineinfile:
@@ -27,25 +25,17 @@
   lineinfile:
     path: "{{ logstash_config }}"
     regexp: "^# node.name:"
-    line: "node.name: {{ data.logstash[count].instance.hostname }}"
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['logstash'] }}"
-  loop_control:
-    index_var: count
+    line: "node.name: {{ elk_self.hostname }}"
+  when: inventory_hostname in groups['logstash']
 
 # Convert certificate to pem encoded
 
 - name: Convert private key to PKCS8 format
   community.crypto.openssl_privatekey_convert:
-    src_path: "{{ logstash_ssl_directory }}/{{ data.logstash[count].instance.hostname }}.key"
-    dest_path: "{{ logstash_ssl_directory }}/{{ data.logstash[count].instance.hostname }}.pkcs8.key"
+    src_path: "{{ logstash_ssl_directory }}/{{ elk_self.hostname }}.key"
+    dest_path: "{{ logstash_ssl_directory }}/{{ elk_self.hostname }}.pkcs8.key"
     format: pkcs8
     owner: logstash
     group: logstash
     mode: '0600'
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['logstash'] }}"
-  loop_control:
-    index_var: count
+  when: inventory_hostname in groups['logstash']

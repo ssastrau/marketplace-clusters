@@ -91,8 +91,8 @@ elasticsearch.password: "{{ kibana_system_password }}"
 # xpack.security.http.ssl.client_authentication in Elasticsearch is set to required.
 #elasticsearch.ssl.certificate: /path/to/your/client.crt
 #elasticsearch.ssl.certificate: /etc/kibana/certs/kibana.crt
-elasticsearch.ssl.certificate: {{ kibana_ssl_directory }}/{{ data.kibana[count].instance.hostname }}.crt
-elasticsearch.ssl.key: {{ kibana_ssl_directory }}/{{ data.kibana[count].instance.hostname }}.key
+elasticsearch.ssl.certificate: {{ kibana_ssl_directory }}/{{ elk_self.hostname }}.crt
+elasticsearch.ssl.key: {{ kibana_ssl_directory }}/{{ elk_self.hostname }}.key
 
 # Enables you to specify a path to the PEM file for the certificate
 # authority for your Elasticsearch instance.

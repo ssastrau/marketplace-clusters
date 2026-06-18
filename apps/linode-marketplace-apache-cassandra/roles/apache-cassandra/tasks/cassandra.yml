@@ -14,11 +14,6 @@
     src: templates/cassandra.yaml.j2
     dest: '{{ cassandra_config_directory }}/cassandra.yaml'
     mode: '0644'
-  loop: "{{ groups['cassandra_servers'] }}"
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop_control:
-    index_var: count
 
 - name: Update data center region
   lineinfile:
@@ -37,11 +32,6 @@
     src: templates/cqlshrc.j2
     dest: /root/.cassandra/cqlshrc
     mode: '0600'
-  run_once: true
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['cassandra_servers'] }}"
-  loop_control:
-    index_var: count
 
 - name: Start cassandra
   systemd:
