@@ -151,6 +151,6 @@
   file:
     path: /var/log/spark-events
     state: directory
-    owner: root
-    group: root
+    owner: spark
+    group: spark
     mode: '0755'
