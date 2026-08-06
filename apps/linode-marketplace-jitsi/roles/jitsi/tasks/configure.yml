@@ -24,23 +24,50 @@
 - name: Update XMPP hostname in jvb.conf
   lineinfile:
     path: "{{ jvb_conf }}"
-    regexp: '^\s*hostname\s*=.*'
-    line: "        hostname = \"{{ jitsi_data.results.jitsi[0].instance.ip_priv1 }}\""
+    regexp: '^\s*HOSTNAME\s*='
+    insertafter: '^\s*shard\s*\{'
+    line: "            HOSTNAME={{ jitsi_data.results.jitsi[0].instance.ip_priv1 }}"
   when: inventory_hostname in groups['jvb_servers']
 
 - name: Update MUC nickname in jvb.conf
   lineinfile:
     path: "{{ jvb_conf }}"
-    regexp: '^\s*muc-nickname\s*=.*'
-    line: "        muc-nickname = \"{{ jitsi_self.hostname }}\""
+    regexp: '^\s*MUC_NICKNAME\s*='
+    insertafter: '^\s*shard\s*\{'
+    line: "            MUC_NICKNAME={{ jitsi_self.hostname }}"
   when: inventory_hostname in groups['jvb_servers']
 
 - name: Disable certificate verification in jvb.conf
-  blockinfile:
+  lineinfile:
     path: "{{ jvb_conf }}"
-    marker: "        # {mark} ANSIBLE MANAGED - cert-verify"
-    insertafter: '^\s*muc-nickname\s*=.*'
-    block: "        disable-certificate-verification = true"
+    regexp: '^\s*DISABLE_CERTIFICATE_VERIFICATION\s*='
+    insertafter: '^\s*MUC_NICKNAME\s*='
+    line: "            DISABLE_CERTIFICATE_VERIFICATION=true"
+  when: inventory_hostname in groups['jvb_servers']
+
+- name: Generate the videobridge XMPP password
+  set_fact:
+    jvb_xmpp_password: "{{ lookup('password', '/dev/null length=32 chars=ascii_letters,digits') }}"
+  run_once: true
+  delegate_to: localhost
+
+- name: Set the videobridge password in prosody
+  shell: |
+    set -o pipefail
+    printf '%s\n%s\n' '{{ jvb_xmpp_password }}' '{{ jvb_xmpp_password }}' |
+      prosodyctl --config /etc/prosody/prosody.cfg.lua passwd jvb@auth.{{ _domain }}
+  args:
+    executable: /bin/bash
+  no_log: true
+  when: inventory_hostname in groups['jitsi_servers']
+
+- name: Set the videobridge password in jvb.conf
+  lineinfile:
+    path: "{{ jvb_conf }}"
+    regexp: '^\s*PASSWORD\s*='
+    insertafter: '^\s*shard\s*\{'
+    line: '            PASSWORD="{{ jvb_xmpp_password }}"'
+  no_log: true
   when: inventory_hostname in groups['jvb_servers']
 
 # update nginx conf
@@ -130,8 +157,8 @@
   lineinfile:
     path: "{{ jvb_conf }}"
     regexp: '^\s*server-id\s*=.*'
-    line: "        server-id = {{ jitsi_self.hostname }}"
-    insertafter: '^\s*muc-nickname\s*=.*'
+    line: "            server-id = {{ jitsi_self.hostname }}"
+    insertafter: '^\s*MUC_NICKNAME\s*='
   when: inventory_hostname in groups['jvb_servers']
 
 - name: Enabling videobridge relay
@@ -195,5 +222,6 @@
 - name: Disable jitsi-videobridge2 service on jitsi server
   systemd:
     name: jitsi-videobridge2
+    state: stopped
     enabled: false
   when: inventory_hostname in groups['jitsi_servers']
