@@ -19,7 +19,7 @@
 - name: Configure galera.cnf {{ host1 }}
   template:
     src: galera.cnf.j2
-    dest: /etc/mysql/conf.d/galera.cnf
+    dest: /etc/mysql/mariadb.conf.d/99-galera.cnf
     owner: mysql
     group: mysql
     mode: '0640'
@@ -44,7 +44,7 @@
 - name: Configure galera.cnf {{ host2 }}
   template:
     src: galera.cnf.j2
-    dest: /etc/mysql/conf.d/galera.cnf
+    dest: /etc/mysql/mariadb.conf.d/99-galera.cnf
     owner: mysql
     group: mysql
     mode: '0640'
@@ -69,7 +69,7 @@
 - name: Configure galera.cnf {{ host3 }}
   template:
     src: galera.cnf.j2
-    dest: /etc/mysql/conf.d/galera.cnf
+    dest: /etc/mysql/mariadb.conf.d/99-galera.cnf
     owner: mysql
     group: mysql
     mode: '0640'
