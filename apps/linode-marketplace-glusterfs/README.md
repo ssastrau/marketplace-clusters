@@ -118,10 +118,10 @@ mkdir /var/lib/glusterd
 touch /var/lib/glusterd/secure-access
 ```
 
-Go ahead and grab the SSL certificates for client1 that was created by the playbook on the first Gluster node; This is the provisioner node. For example, on the first Gluster node you will see the following in `/usr/lib/ssl`:
+Go ahead and grab the SSL certificates for client1 that was created by the playbook on the first Gluster node; This is the provisioner node. For example, on the first Gluster node you will see the following in `/etc/ssl`:
 
 ```
-(env) root@gluster1:/usr/lib/ssl# ls -l
+(env) root@gluster1:/etc/ssl# ls -l
 total 68
 lrwxrwxrwx 1 root root    14 Mar 16  2022 certs -> /etc/ssl/certs
 -rw-r--r-- 1 root root  1630 Mar 28 14:40 client1.csr
@@ -144,7 +144,7 @@ lrwxrwxrwx 1 root root    16 Mar 16  2022 private -> /etc/ssl/private
 
 ```
 
-You will need to copy the `client1.pem`, `client1.key` and the `glusterfs.ca` and put them on the node for client1 in the `/usr/lib/ssl` directory.
+You will need to copy the `client1.pem`, `client1.key` and the `glusterfs.ca` and put them on the node for client1 in the `/etc/ssl` directory. GlusterFS reads its certificate from `/etc/ssl/glusterfs.pem` and that path is not configurable, so the files must land there and not in openssl's `OPENSSLDIR`.
 
 **NOTE**: You will need to rename `client1.pem`, `client1.key` as `glusterfs.pem` and `glusterfs.key` on the client node to ensure that the Gluster client is able to read the certficate files.
 
