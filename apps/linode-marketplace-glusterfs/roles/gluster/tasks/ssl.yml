@@ -2,7 +2,7 @@
 # generate tls certificates for gluster and client nodes
 - name: Set ssl directory
   set_fact:
-    ssl_directory: "/usr/lib/ssl"
+    ssl_directory: "/etc/ssl"
 
 - name: Generate dhparams.pem with the default size (4096 bits)
   community.crypto.openssl_dhparam:
