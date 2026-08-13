@@ -4,130 +4,82 @@ set -e
 
 SSH_TIMEOUT=600
 DEPLOYMENT_SCRIPT="${APP_NAME#linode-marketplace-}-deploy.sh"
+REMOTE_DIR="/root/deployment"
 SSH_KEY="$HOME/.ssh/id_linode"
 
 mkdir -p ~/.ssh
 echo "$LINODE_PRIVATE_SSH_KEY" > "$SSH_KEY"
 chmod 600 "$SSH_KEY"
 
-wait_for_ssh() {
-  local timeout="${1:-$SSH_TIMEOUT}"
-  local elapsed=0
+SSH_OPTS=(
+  -i "$SSH_KEY"
+  -o StrictHostKeyChecking=no
+  -o PasswordAuthentication=no
+  -o BatchMode=yes
+  -o ConnectTimeout=10
+  -o ServerAliveInterval=30
+  -o ServerAliveCountMax=10
+  -o TCPKeepAlive=yes
+)
 
-  while true; do
-    if ssh \
-      -i "$SSH_KEY" \
-      -o StrictHostKeyChecking=accept-new \
-      -o PasswordAuthentication=no \
-      -o BatchMode=yes \
-      root@"$LINODE_IPV4" "exit"; then
-      echo "Connected to Linode via SSH"
-      break
-    fi
-    if [ "$elapsed" -ge "$timeout" ]; then
-      echo "Timeout reached. Unable to connect to Linode via SSH."
+wait_for_ssh() {
+  local deadline=$((SECONDS + SSH_TIMEOUT))
+
+  until ssh "${SSH_OPTS[@]}" "root@$LINODE_IPV4" "exit"; do
+    if [ "$SECONDS" -ge "$deadline" ]; then
+      echo "Timeout reached after ${SSH_TIMEOUT}s. Unable to connect to Linode via SSH."
       exit 1
     fi
-    echo "Waiting for SSH to be ready... (${elapsed}s/${timeout}s)"
+    echo "Waiting for SSH to be ready... ($((deadline - SECONDS))s remaining)"
     sleep 10
-    elapsed=$((elapsed + 10))
   done
+
+  echo "Connected to Linode via SSH"
 }
 
-debian_deploy() {
-  set +e
-  ssh \
-  -i "$SSH_KEY" \
-  -o StrictHostKeyChecking=no \
-  -o ServerAliveInterval=30 \
-  -o ServerAliveCountMax=10 \
-  -o TCPKeepAlive=yes \
-  "root@$LINODE_IPV4" \
-  "
-   export LINODE_API_SECRET=$LINODE_API_SECRET
-   export LINODE_DOMAIN=$LINODE_DOMAIN
-   export LINODE_ID=$LINODE_ID
-   export BRANCH=$BRANCH
-   export GH_USER=$GH_USER
-   export APP_NAME=$APP_NAME
-   export DEPLOYMENT_SCRIPT=$DEPLOYMENT_SCRIPT
-   export UUID=$UUID
-
-   sudo apt update
-   sudo apt install -y git
-   git clone --depth 1 --branch $BRANCH https://github.com/$GH_USER/marketplace-clusters.git /root/repo
-   cd /root/repo/deployment_scripts/$APP_NAME
-   chmod +x test-vars.sh $DEPLOYMENT_SCRIPT
-   . ./test-vars.sh
-   ./$DEPLOYMENT_SCRIPT
-   "
-
-  local rc=$?
-  set -e
-
-  if [ "$rc" -eq 255 ]; then
-    echo "SSH disconnected (exit 255). Assuming remote reboot occurred; continuing."
-    rc=0
-  fi
-
-  if [ "$rc" -ne 0 ]; then
-    echo "Remote deployment failed with exit code $rc"
-    exit "$rc"
-  fi
-}
-
-rhel_deploy() {
-  ssh \
-  -i "$SSH_KEY" \
-  -o StrictHostKeyChecking=no \
-  -o ServerAliveInterval=30 \
-  -o ServerAliveCountMax=10 \
-  -o TCPKeepAlive=yes \
-  "root@$LINODE_IPV4" \
-  "
-   export LINODE_API_SECRET=$LINODE_API_SECRET
-   export LINODE_DOMAIN=$LINODE_DOMAIN
-   export LINODE_ID=$LINODE_ID
-   export BRANCH=$BRANCH
-   export GH_USER=$GH_USER
-   export APP_NAME=$APP_NAME
-   export DEPLOYMENT_SCRIPT=$DEPLOYMENT_SCRIPT
-   export UUID=$UUID
-
-   dnf -y install git
-   git clone --depth 1 --branch $BRANCH https://github.com/$GH_USER/marketplace-clusters.git /root/repo
-   cd /root/repo/deployment_scripts/$APP_NAME
-   chmod +x test-vars.sh $DEPLOYMENT_SCRIPT
-   . ./test-vars.sh
-   ./$DEPLOYMENT_SCRIPT
-   "
-
-  local rc=$?
-  set -e
-
-  if [ "$rc" -eq 255 ]; then
-    echo "SSH disconnected (exit 255). Assuming remote reboot occurred; continuing."
-    rc=0
-  fi
-
-  if [ "$rc" -ne 0 ]; then
-    echo "Remote deployment failed with exit code $rc"
-    exit "$rc"
-  fi
+copy_deployment_scripts() {
+  echo "Copying deployment_scripts/$APP_NAME to $REMOTE_DIR"
+  scp -r "${SSH_OPTS[@]}" \
+  "deployment_scripts/$APP_NAME" \
+  "root@$LINODE_IPV4:$REMOTE_DIR"
 }
 
 run_remote_deploy() {
-  echo "Detected $IMAGE image"
-  if [[ "$IMAGE" == *"ubuntu"* || "$IMAGE" == *"kali"* || "$IMAGE" == *"debian"* ]]; then
-    debian_deploy
-  elif [[ "$IMAGE" == *"almalinux"* || "$IMAGE" == *"centos"* ]]; then
-    rhel_deploy
-  else
-    echo "Unsupported image distribution: $IMAGE" >&2
-    exit 1
+  echo "Deploying $APP_NAME on $IMAGE image"
+
+  set +e
+  ssh "${SSH_OPTS[@]}" \
+  "root@$LINODE_IPV4" \
+  "
+   export LINODE_API_SECRET=$LINODE_API_SECRET
+   export LINODE_ID=$LINODE_ID
+   export GH_USER=$GH_USER
+   export BRANCH=$BRANCH
+   export APP_NAME=$APP_NAME
+   export DEPLOYMENT_SCRIPT=$DEPLOYMENT_SCRIPT
+   export UUID=$UUID
+
+   cd $REMOTE_DIR
+   chmod +x test-vars.sh $DEPLOYMENT_SCRIPT
+   . ./test-vars.sh
+   ./$DEPLOYMENT_SCRIPT
+   "
+
+  local rc=$?
+  set -e
+
+  if [ "$rc" -eq 255 ]; then
+    echo "SSH disconnected (exit 255). Assuming remote reboot occurred; continuing."
+    rc=0
+  fi
+
+  if [ "$rc" -ne 0 ]; then
+    echo "Remote deployment failed with exit code $rc"
+    exit "$rc"
   fi
 }
 
 wait_for_ssh
+copy_deployment_scripts
 run_remote_deploy
 wait_for_ssh

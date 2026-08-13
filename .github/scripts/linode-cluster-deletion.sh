@@ -15,6 +15,7 @@ if [ -n "$LINODES" ]; then
   echo "Found Linodes with UUID $UUID: $LINODES"
   for LINODE_ID in $LINODES; do
     RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X DELETE \
+      --retry 3 --retry-delay 5 \
       -H "Authorization: Bearer $LINODE_API_SECRET" \
       https://api.linode.com/v4/linode/instances/$LINODE_ID)
 

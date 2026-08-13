@@ -4,6 +4,7 @@ set -e
 
 if [ -n "$LINODE_ID" ] && [ "$LINODE_ID" != "null" ]; then
 	RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X DELETE \
+		--retry 3 --retry-delay 5 \
 		-H "Authorization: Bearer $LINODE_API_SECRET" \
 		https://api.linode.com/v4/linode/instances/$LINODE_ID)
 	if [ "$RESPONSE" = "200" ]; then

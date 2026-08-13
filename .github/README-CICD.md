@@ -58,11 +58,12 @@ This directory contains the GitHub Actions workflows and supporting scripts that
 Each app in the matrix goes through the following steps:
 
 ```
-linode-config.sh                   → Load app-specific Linode configuration (region, type, image, etc.)
+linode-config.sh                   → Load app-specific Linode configuration (region, type, image, UUID)
 linode-provisioning.sh             → Create a Linode instance and wait for it to be ready
-app-installation.sh                → SSH into the Linode, clone the repo, and run the deployment script
-linode-deletion.sh                 → Delete the Linode instance (always runs, even on failure)
-teardown-domain-records-cleanup.sh → Remove DNS records created during deployment (always runs)
+app-installation.sh                → Copy the app's deployment_scripts/ dir to the Linode over SSH and run it
+regression-tests.sh                → Run the Playwright suite for the app, if it has one
+linode-deletion.sh                 → Delete the provisioner Linode by ID (always runs, even on failure)
+linode-cluster-deletion.sh         → Delete remaining cluster nodes by UUID label (always runs)
 ```
 
 ---
@@ -71,10 +72,10 @@ teardown-domain-records-cleanup.sh → Remove DNS records created during deploym
 
 | Name                | Type   | Description                                                       |
 |---------------------|--------|-------------------------------------------------------------------|
-| `LINODE_API_SECRET` | Secret | Linode API token used for provisioning and DNS management         |
+| `LINODE_API_SECRET` | Secret | Linode API token used for provisioning                            |
 | `LINODE_ROOT_PASS`  | Secret | Root password set on provisioned Linode instances                 |
-| `LINODE_DOMAIN`     | Secret | Base domain used for app DNS records                              |
-| `LINODE_SUBDOMAIN`  | Secret | Subdomain prefix used for app DNS records                         |
+| `LINODE_PUBLIC_SSH_KEY`  | Secret | Public key added to `authorized_keys` on provisioned instances |
+| `LINODE_PRIVATE_SSH_KEY` | Secret | Private key the runner uses to SSH into provisioned instances |
 | `DEPS_APP_ID`       | Secret | GitHub App ID used for authenticating dependency updates          |
 | `DEPS_APP_SECRET`   | Secret | GitHub App private key used for authenticating dependency updates |
 | `SLACK_WEBHOOK_URL` | Secret | Webhook URL for posting deployment notifications to Slack         |
@@ -88,14 +89,14 @@ All supporting scripts live in `.github/scripts/`:
 |--------------------------------------|------------------------------------------------------------------------------------|
 | `get-all-apps.sh`                    | Lists all apps under `deployment_scripts/` that have a `linode-config.sh`          |
 | `get-updated-apps.sh`                | Lists apps with changes vs `main` that have a `linode-config.sh`                   |
-| `setup-domain-records-cleanup.sh`    | Pre-deployment DNS cleanup                                                         |
-| `teardown-domain-records-cleanup.sh` | Post-deployment DNS cleanup                                                        |
 | `linode-provisioning.sh`             | Creates a Linode instance and outputs `LINODE_IPV4` and `LINODE_ID`                |
-| `app-installation.sh`                | Connects via SSH and runs the app deployment                                       |
+| `app-installation.sh`                | Copies the app's deployment scripts over SSH and runs the deployment               |
+| `regression-tests.sh`                | Runs the app's Playwright suite, if one exists                                     |
 | `linode-deletion.sh`                 | Deletes a Linode instance by ID                                                    |
+| `linode-cluster-deletion.sh`         | Deletes all cluster nodes whose label contains the run's `UUID`                    |
 | `static-code-shellcheck.sh`          | Runs ShellCheck across the repository                                              |
 | `static-code-yamllint.sh`            | Runs yamllint across the repository                                                |
-| `static-code-ansible-lint.sh`        | Runs ansible-lint across the repository                                            |
+| `static-code-ansible-lint.sh`        | Runs ansible-lint — scoped to updated apps when `CONFIGS` is set, else repo-wide   |
 | `python-deps-check.py`               | Queries PyPI and records available Python package updates                          |
 | `ansible-deps-check.py`              | Queries Ansible Galaxy v3 API and records Ansible collection updates               |
 | `generate-pr-body.py`                | Parses dependency update reports to generate a unified Markdown PR body            |
