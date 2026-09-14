@@ -1,5 +1,14 @@
 ---
-# vars
+- name: UFW allow outgoing
+  ufw:
+    direction: outgoing
+    policy: allow
+
+- name: UFW allow incoming
+  ufw:
+    direction: incoming
+    policy: allow
+
 - name: Create cluster IP list
   set_fact:
     logstash_ips: "{{ data.logstash | map(attribute='instance.ip_priv1') | list }}"
