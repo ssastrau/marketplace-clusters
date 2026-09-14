@@ -233,7 +233,7 @@ function run {
 
 	# clone repo and set up Ansible environment
 	echo "[info] Cloning ${BRANCH} branch from ${GIT_REPO}..."
-	git -C /tmp clone -b ${BRANCH} ${GIT_REPO}
+	git -C /tmp clone --recurse-submodules -b ${BRANCH} ${GIT_REPO}
 	cd ${WORK_DIR}/${MARKETPLACE_APP}
 	python3 -m venv env
 	source env/bin/activate
