@@ -33,6 +33,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
+        with:
+          submodules: true
       - name: Run ansible-lint
         run: bash .github/scripts/static-code-ansible-lint.sh
   get-all-apps:
