@@ -3,9 +3,15 @@
 set -e
 
 if [ -n "$CONFIGS" ]; then
-	APP_DIRS=$(echo "$CONFIGS" | jq -r '.[] | "apps/" + .' | tr '\n' ' ')
-	LINT_PATHS=$(find $APP_DIRS -type f \( -name '*.yml' -o -name '*.yaml' \) | tr '\n' ' ')
-	echo "Linting updated apps: $APP_DIRS"
+	APP_DIRS=$(echo "$CONFIGS" | jq -r '.[] | select(. != "linode_helpers") | "apps/" + .' | tr '\n' ' ')
+	if [ -n "$APP_DIRS" ]; then
+		LINT_PATHS=$(find $APP_DIRS -type f \( -name '*.yml' -o -name '*.yaml' \) | tr '\n' ' ')
+		echo "Linting updated apps: $APP_DIRS"
+	else
+		LINT_PATHS=""
+		echo "No apps to lint."
+		exit 0
+	fi
 else
 	LINT_PATHS=""
 	echo "Linting all apps"
