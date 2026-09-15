@@ -17,8 +17,18 @@ else
 	echo "Linting all apps"
 fi
 
-pip install ansible-lint
-ansible-galaxy collection install community.general community.docker community.crypto linode.cloud ansible.posix gluster.gluster community.mysql community.postgresql
+echo "::group::pip install ansible-lint"
+time pip install ansible-lint
+echo "::endgroup::"
+
+echo "::group::ansible-galaxy collection install"
+time ansible-galaxy collection install community.general community.docker community.crypto linode.cloud ansible.posix gluster.gluster community.mysql community.postgresql
+echo "::endgroup::"
+
 export ANSIBLE_CONFIG="tests/static_code_analysis/ansible_playbooks/ansible.cfg"
-ansible-lint -c tests/static_code_analysis/ansible_playbooks/.ansible-lint.yaml $LINT_PATHS
+
+echo "::group::ansible-lint"
+time ansible-lint -c tests/static_code_analysis/ansible_playbooks/.ansible-lint.yaml $LINT_PATHS
+echo "::endgroup::"
+
 echo "✅ ansible-lint passed: no errors found."
