@@ -51,7 +51,7 @@ SHELL:
 # user defined
 export TOKEN="your api token"
 export ROOT_PASS="aComplexP@ssword"
-export SUDO_USERNAME="admin"
+export USERNAME="admin"
 export CLUSTER_NAME="name of your cluster"
 export LABEL="cluster label"
 export SPARK_USER="spark username"
@@ -75,7 +75,7 @@ curl -H "Content-Type: application/json" \
         "cluster_size": "3",
         "token_password": "${TOKEN}",
         "cluster_name": "${CLUSTER_NAME}",
-        "sudo_username": "${SUDO_USERNAME}",
+        "username": "${USERNAME}",
         "soa_email_address": "${SOA_EMAIL_ADDRESS}",
         "spark_user": "${SPARK_USER}"
     },
@@ -99,7 +99,7 @@ linode-cli linodes create \
   --private_ip true \
   --region ${REGION} \
   --root_pass '${ROOT_PASS}' \
-  --stackscript_data '{"add_ssh_keys": "yes","cluster_size":"3","token_password":"${TOKEN_PASSWORD}","cluster_name":"${CLUSTER_NAME}","sudo_username":"${SUDO_USERNAME}","soa_email_address":"${SOA_EMAIL_ADDRESS}", "domain":"${DOMAIN}"}' \
+  --stackscript_data '{"add_ssh_keys": "yes","cluster_size":"3","token_password":"${TOKEN_PASSWORD}","cluster_name":"${CLUSTER_NAME}","username":"${USERNAME}","soa_email_address":"${SOA_EMAIL_ADDRESS}", "domain":"${DOMAIN}"}' \
   --stackscript_id 1403818 \
   --tags mytag \
   --type g6-standard-2
@@ -109,7 +109,7 @@ linode-cli linodes create \
 ## Resources
 - [Create Linode via API](https://www.linode.com/docs/api/linode-instances/#linode-create)
 - [Stackscript referece](https://www.linode.com/docs/guides/writing-scripts-for-use-with-linode-stackscripts-a-tutorial/#user-defined-fields-udfs)
-  --stackscript_data '{"add_ssh_keys": "yes","cluster_size":"3","token_password":"${TOKEN_PASSWORD}","cluster_name":"${CLUSTER_NAME}","sudo_username":"${SUDO_USERNAME}","soa_email_address":"${SOA_EMAIL_ADDRESS}", "domain":"${DOMAIN}"}' \
+  --stackscript_data '{"add_ssh_keys": "yes","cluster_size":"3","token_password":"${TOKEN_PASSWORD}","cluster_name":"${CLUSTER_NAME}","username":"${USERNAME}","soa_email_address":"${SOA_EMAIL_ADDRESS}", "domain":"${DOMAIN}"}' \
   --stackscript_id 1403818 \
   --tags mytag \
   --type g6-standard-2

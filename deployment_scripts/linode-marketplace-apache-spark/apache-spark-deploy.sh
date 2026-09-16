@@ -23,7 +23,7 @@ fi
 ## Linode/SSH Security Settings
 #<UDF name="token_password" label="Your Linode API token" />
 #<UDF name="soa_email_address" label="Email address (for the Let's Encrypt SSL certificate)" example="Example: user@example.com">
-#<UDF name="sudo_username" label="The limited sudo user to be created for the Linode: *No Capital Letters or Special Characters*">
+#<UDF name="username" label="The limited sudo user to be created for the Linode: *No Capital Letters or Special Characters*">
 #<UDF name="add_ssh_keys" label="Add Account SSH Keys to All Nodes?" oneOf="yes,no" default="yes">
 
 ## Domain Settings
@@ -133,7 +133,7 @@ function rename_provisioner {
 readonly TEMP_ROOT_PASS=$(openssl rand -base64 32)
 readonly LINODE_PARAMS=($(curl -sH "Authorization: Bearer ${TOKEN_PASSWORD}" "https://api.linode.com/v4/linode/instances/${LINODE_ID}" | jq -r .type,.region,.image,.disk_encryption))
 readonly TAGS=$(curl -sH "Authorization: Bearer ${TOKEN_PASSWORD}" "https://api.linode.com/v4/linode/instances/${LINODE_ID}" | jq -r .tags)
-readonly group_vars="${WORK_DIR}/${MARKETPLACE_APP}/group_vars/spark/vars"
+readonly group_vars="${WORK_DIR}/${MARKETPLACE_APP}/group_vars/linode/vars"
 
 function destroy {
 	cd ${WORK_DIR}/${MARKETPLACE_APP}
@@ -183,7 +183,7 @@ EOF
 function udf {
 	sed 's/  //g' <<EOF >>${group_vars}
   # sudo username
-  sudo_username: ${SUDO_USERNAME}
+  username: ${USERNAME}
 
   # ssl/tls
   soa_email_address: ${SOA_EMAIL_ADDRESS}

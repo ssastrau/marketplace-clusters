@@ -7,5 +7,5 @@
   user: root
   vars:
     local_home: "{{ lookup('env','HOME') }}"
-  vars_files: [group_vars/spark/vars, group_vars/spark/secret_vars]
+  vars_files: [group_vars/linode/vars, group_vars/linode/secret_vars]
   roles: [common, spark, post]
