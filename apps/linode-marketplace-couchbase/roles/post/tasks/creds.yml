@@ -2,14 +2,14 @@
 # roles/post/tasks/creds.yml
 - name: Writing deployment credentials locally
   blockinfile:
-    path: "/home/{{ sudo_username }}/.credentials"
+    path: "/home/{{ username }}/.credentials"
     create: true
-    owner: "{{ sudo_username }}"
-    group: "{{ sudo_username }}"
+    owner: "{{ username }}"
+    group: "{{ username }}"
     mode: "0644"
     block: |
       # System User
-      Sudo User: {{ sudo_username }}
+      Sudo User: {{ username }}
       Password: {{ sudo_password }}
       # Couchbase Server User: Administrator
       Couchbase Server Administrator Password: {{ couchbase_admin_password }}

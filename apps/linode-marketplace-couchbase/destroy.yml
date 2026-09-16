@@ -3,7 +3,7 @@
 - name: Destroying Linodes
   hosts: localhost
   connection: local
-  vars_files: [group_vars/couchbase/vars]
+  vars_files: [group_vars/linode/vars]
 
   tasks:
     - name: Deleting linodes except provisioner

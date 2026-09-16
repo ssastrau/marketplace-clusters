@@ -5,16 +5,10 @@
   delegate_to: localhost
   run_once: true
 
-- name: Adding sudo user
-  include_tasks: sudouser.yml
-
 - name: Dumping credentials locally
   import_tasks: creds.yml
   delegate_to: localhost
   run_once: true
-
-- name: Add user ssh keys
-  include_tasks: sshkeys.yml
 
 - name: Graceful exit
   meta: end_play

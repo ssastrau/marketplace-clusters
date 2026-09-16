@@ -22,7 +22,7 @@ fi
 
 ## deployment Variables
 # <UDF name="token_password" label="Your Linode API token" />
-# <UDF name="sudo_username" label="The limited sudo user to be created in the cluster" />
+# <UDF name="username" label="The limited sudo user to be created in the cluster" />
 # <UDF name="email_address" label="Email Address for CA and Let's Encrypt certificates" example="Example: user@domain.tld" />
 # <UDF name="clusterheader" label="Cluster Settings" default="Yes" header="Yes">
 # <UDF name="cluster_size" label="Couchbase Server count" default="3" oneOf="3,5,7" />
@@ -129,7 +129,7 @@ function rename_provisioner {
 }
 
 readonly TEMP_ROOT_PASS=$(openssl rand -base64 32)
-readonly group_vars="${WORK_DIR}/${MARKETPLACE_APP}/group_vars/couchbase/vars"
+readonly group_vars="${WORK_DIR}/${MARKETPLACE_APP}/group_vars/linode/vars"
 
 function destroy {
 	cd ${WORK_DIR}/${MARKETPLACE_APP}
@@ -174,7 +174,7 @@ EOF
 function udf {
 	sed 's/  //g' <<EOF >>${group_vars}
   # sudo username
-  sudo_username: ${SUDO_USERNAME}
+  username: ${USERNAME}
   email_address: ${EMAIL_ADDRESS}
   country_name: ${COUNTRY_NAME}
   state_or_province_name: ${STATE_OR_PROVINCE_NAME}

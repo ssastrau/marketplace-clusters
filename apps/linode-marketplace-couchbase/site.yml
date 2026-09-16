@@ -6,6 +6,6 @@
   user: root
   vars:
     local_home: "{{ lookup('env','HOME') }}"
-  vars_files: [group_vars/couchbase/vars]
+  vars_files: [group_vars/linode/vars]
   gather_facts: true
   roles: [common, couchbase, post]
