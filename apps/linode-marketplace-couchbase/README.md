@@ -33,7 +33,7 @@ SHELL:
 ```
 export TOKEN="YOUR API TOKEN"
 export ROOT_PASS="aComplexP@ssword"
-export SUDO_USERNAME="sudo_user"
+export USERNAME="username"
 export EMAIL_ADDRESS="email@domain.com"
 curl -H "Content-Type: application/json" \
     -H "Authorization: Bearer ${TOKEN}" \
@@ -45,7 +45,7 @@ curl -H "Content-Type: application/json" \
       "stackscript_id": 1366191,
       "stackscript_data": {
         "token_password": "${TOKEN}"
-        "sudo_username": "${SUDO_USERNAME}"
+        "username": "${USERNAME}"
         "email_address": "${EMAIL_ADDRESS}"
         "cluster_size": "5"
       },
@@ -66,14 +66,14 @@ CLI:
 ```
 export TOKEN="YOUR API TOKEN"
 export ROOT_PASS="aComplexP@ssword"
-export SUDO_USERNAME="sudo_user"
+export USERNAME="username"
 export EMAIL_ADDRESS="email@domain.com"
 linode-cli linodes create \
   --label linode123 \
   --root_pass ${ROOT_PASS} \
   --booted true \
   --stackscript_id 1366191 \
-  --stackscript_data '{"token_password": "${TOKEN}","sudo_username": "${SUDO_USERNAME}","email_address": "${EMAIL_ADDRESS}","cluster_size": "5"} \
+  --stackscript_data '{"token_password": "${TOKEN}","username": "${USERNAME}","email_address": "${EMAIL_ADDRESS}","cluster_size": "5"} \
   --region us-mia \
   --type g6-standard-4 \
   --authorized_users "myUser"
