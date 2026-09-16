@@ -3,7 +3,7 @@
 - name: Destroying cassandra instances
   hosts: localhost
   connection: local
-  vars_files: [group_vars/apache-cassandra/vars]
+  vars_files: [group_vars/linode/vars]
   vars:
     count: '{{ cluster_size - 1 }}'
   tasks:

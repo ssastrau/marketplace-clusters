@@ -7,5 +7,5 @@
   gather_facts: true
   vars:
     local_home: "{{ lookup('env','HOME') }}"
-  vars_files: [group_vars/apache-cassandra/vars]
+  vars_files: [group_vars/linode/vars]
   roles: [common, apache-cassandra, post]
