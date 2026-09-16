@@ -1,10 +1,30 @@
 ---
-# roles/post/tasks/main.yml
-- name: Adding sudo user
-  import_tasks: sudouser.yml
+- name: Copy MOTD template to /etc/motd
+  template:
+    src: templates/motd.j2
+    dest: /etc/motd
+    mode: '0644'
+  run_once: true
+  delegate_to: localhost
 
-- name: Add user ssh keys
-  import_tasks: sshkeys.yml
-
-- name: Dumping credentials locally
-  import_tasks: motd.yml
+- name: Writing deployment credentils locally
+  blockinfile:
+    path: '/home/{{ username }}/.credentials'
+    create: true
+    owner: '{{ username }}'
+    group: '{{ username }}'
+    mode: '0644'
+    block: |
+      # system user
+      sudo username: {{ username }}
+      Sudo username password: {{ sudo_password }}
+      # SSL Passwords
+      CA password: {{ ca_password }}
+      Keystore password: {{ keystore_password }}
+      Truststore password: {{ truststore_password }}
+      # DB creds
+      Cassandra database user: {{ db_user }}
+      Cassandra superuser password: {{ db_password }}
+      PLEASE REMOVE THIS FILE ONCE YOU'VE LOGGED THESE PASSWORDS IN A SECURE PASSWORD MANAGER!
+  run_once: true
+  delegate_to: localhost
