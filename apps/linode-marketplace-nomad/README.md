@@ -65,7 +65,7 @@ curl -H "Content-Type: application/json" \
         "servers": "3",
         "clients": "3",
         "token_password": "LINODE_API_TOKEN",
-        "sudo_username": "sudo_user"
+        "username": "sudo_user"
         "email_address": "EMAIL_ADDRESS",
     },
     "stackscript_id": 1226544,
@@ -85,7 +85,7 @@ linode-cli linodes create \
   --private_ip true \
   --region us-ord \
   --root_pass 'A_Really_Great_password' \
-  --stackscript_data '{"clusterheader": "Yes","add_ssh_keys":"yes","cluster_size":"6","clients":"3","servers":"3","token_password":"LINODE_API_TOKEN","sudo_username":"user1","email_address":"EMAIL_ADDRESS"}' \
+  --stackscript_data '{"clusterheader": "Yes","add_ssh_keys":"yes","cluster_size":"6","clients":"3","servers":"3","token_password":"LINODE_API_TOKEN","username":"user1","email_address":"EMAIL_ADDRESS"}' \
   --stackscript_id 1226544 \
   --type g6-dedicated-4
 ```

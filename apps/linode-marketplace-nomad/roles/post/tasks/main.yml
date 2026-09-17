@@ -1,10 +1,23 @@
 ---
-# roles/post/tasks/main.yml
-- name: Adding sudo user
-  import_tasks: sudouser.yml
+- name: Writing deployment credentils locally
+  blockinfile:
+    path: '/home/{{ username }}/.deployment-secrets.txt'
+    create: true
+    owner: '{{ username }}'
+    group: '{{ username }}'
+    mode: '0644'
+    block: |
+      # system user
+      user: {{ username }}
+      password: {{ password }}
 
-- name: Add user ssh keys
-  import_tasks: sshkeys.yml
+      # cluster tag
+      cluster_uuid: {{ cluster_uuid }}
 
-- name: Dumping credentials locally
-  import_tasks: creds.yml
+      # hashi tokens
+      consul_bootstrap_token: {{ consul_bootstrap_token[0] }}
+      consul_nomad_autojoin_token: {{ consul_nomad_autojoin_token[0] }}
+      nomad_bootstrap_token: {{ nomad_bootstrap_token[0] }}
+      nomad_user_token: {{ nomad_user_token[0] }}
+  run_once: true
+  delegate_to: "{{ groups['nomad_cluster'][0] }}"

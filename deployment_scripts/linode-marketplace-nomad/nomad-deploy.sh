@@ -22,7 +22,7 @@ fi
 
 ## Deployment Variables
 # <UDF name="token_password" label="Your Linode API token" />
-# <UDF name="sudo_username" label="The limited sudo user to be created in the cluster" />
+# <UDF name="username" label="The limited sudo user to be created in the cluster" />
 # <UDF name="email_address" label="Email Address" example="Example: user@domain.tld" />
 # <UDF name="clusterheader" label="Cluster Settings" default="Yes" header="Yes">
 # <UDF name="add_ssh_keys" label="Add Account SSH Keys to All Nodes?" oneof="yes,no"  default="yes" />
@@ -136,8 +136,8 @@ function tag_provisioner {
 
 readonly NOMAD_VERSION='1.5.2'
 readonly TEMP_ROOT_PASS=$(openssl rand -base64 32)
-readonly VARS_PATH="./group_vars/nomad/vars"
-readonly SECRET_VARS_PATH="./group_vars/nomad/secret_vars"
+readonly VARS_PATH="./group_vars/linode/vars"
+readonly SECRET_VARS_PATH="./group_vars/linode/secret_vars"
 
 function destroy {
 	cd ${WORK_DIR}/${CLUSTER_APP}
@@ -190,7 +190,7 @@ EOF
 
 function udf {
 	sed 's/  //g' <<EOF >>${VARS_PATH}
-  sudo_username: ${SUDO_USERNAME}
+  username: ${USERNAME}
   email_address: ${EMAIL_ADDRESS}
   add_keys_prompt: ${ADD_SSH_KEYS}
 EOF
