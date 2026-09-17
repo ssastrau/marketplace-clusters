@@ -20,7 +20,7 @@ fi
 ## Deployment Variables
 # <UDF name="token_password" label="Your Linode API token" />
 # <UDF name="disable_root" label="Disable root access over SSH?" oneOf="Yes,No" default="No">
-# <UDF name="sudo_username" label="The limited sudo user to be created in the cluster" />
+# <UDF name="username" label="The limited sudo user to be created in the cluster" />
 # <UDF name="sslheader" label="SSL Information" header="Yes" default="Yes" required="Yes">
 # <UDF name="country_name" label="Details for self-signed SSL certificates: Country or Region" oneof="AD,AE,AF,AG,AI,AL,AM,AO,AQ,AR,AS,AT,AU,AW,AX,AZ,BA,BB,BD,BE,BF,BG,BH,BI,BJ,BL,BM,BN,BO,BQ,BR,BS,BT,BV,BW,BY,BZ,CA,CC,CD,CF,CG,CH,CI,CK,CL,CM,CN,CO,CR,CU,CV,CW,CX,CY,CZ,DE,DJ,DK,DM,DO,DZ,EC,EE,EG,EH,ER,ES,ET,FI,FJ,FK,FM,FO,FR,GA,GB,GD,GE,GF,GG,GH,GI,GL,GM,GN,GP,GQ,GR,GS,GT,GU,GW,GY,HK,HM,HN,HR,HT,HU,ID,IE,IL,IM,IN,IO,IQ,IR,IS,IT,JE,JM,JO,JP,KE,KG,KH,KI,KM,KN,KP,KR,KW,KY,KZ,LA,LB,LC,LI,LK,LR,LS,LT,LU,LV,LY,MA,MC,MD,ME,MF,MG,MH,MK,ML,MM,MN,MO,MP,MQ,MR,MS,MT,MU,MV,MW,MX,MY,MZ,NA,NC,NE,NF,NG,NI,NL,NO,NP,NR,NU,NZ,OM,PA,PE,PF,PG,PH,PK,PL,PM,PN,PR,PS,PT,PW,PY,QA,RE,RO,RS,RU,RW,SA,SB,SC,SD,SE,SG,SH,SI,SJ,SK,SL,SM,SN,SO,SR,SS,ST,SV,SX,SY,SZ,TC,TD,TF,TG,TH,TJ,TK,TL,TM,TN,TO,TR,TT,TV,TW,TZ,UA,UG,UM,US,UY,UZ,VA,VC,VE,VG,VI,VN,VU,WF,WS,YE,YT,ZA,ZM,ZW" />
 # <UDF name="state_or_province_name" label="State or Province" example="Example: Pennsylvania" />
@@ -129,7 +129,7 @@ function rename_provisioner {
 }
 
 readonly REDIS_VERSION='7.4.1'
-readonly group_vars="${WORK_DIR}/${MARKETPLACE_APP}/group_vars/redis-sentinel/vars"
+readonly group_vars="${WORK_DIR}/${MARKETPLACE_APP}/group_vars/linode/vars"
 
 function destroy {
 	cd ${WORK_DIR}/${MARKETPLACE_APP}
@@ -166,7 +166,7 @@ EOF
 }
 
 function secrets {
-  local SECRET_VARS_PATH="./group_vars/redis-sentinel/secret_vars"
+  local SECRET_VARS_PATH="./group_vars/linode/secret_vars"
   local VAULT_PASS=$(openssl rand -base64 32)
   local TEMP_ROOT_PASS=$(openssl rand -base64 32)
   local REDIS_PASSWORD=$(openssl rand -base64 32)
@@ -180,7 +180,7 @@ EOF
 
 function udf {
 	sed 's/  //g' <<EOF >>${group_vars}
-  sudo_username: ${SUDO_USERNAME}
+  username: ${USERNAME}
   redis_version: ${REDIS_VERSION}
   cluster_size: ${CLUSTER_SIZE}
   country_name: ${COUNTRY_NAME}
