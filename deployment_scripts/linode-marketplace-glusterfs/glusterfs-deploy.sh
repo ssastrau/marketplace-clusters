@@ -22,7 +22,7 @@ fi
 
 ## Linode/SSH Security Settings
 #<UDF name="token_password" label="Your Linode API token" />
-#<UDF name="user_name" label="The limited sudo user to be created in the cluster: *No Capital Letters or Special Characters*">
+#<UDF name="username" label="The limited sudo user to be created in the cluster: *No Capital Letters or Special Characters*">
 #<UDF name="add_ssh_keys" label="Add Account SSH Keys to All Nodes?" oneOf="yes,no" default="yes">
 #<UDF name="sslheader" label="SSL Information" header="Yes" default="Yes" required="Yes">
 
@@ -133,8 +133,8 @@ function destroy {
 }
 
 readonly ROOT_PASS=$(sudo cat /etc/shadow | grep root)
-readonly group_vars="${WORK_DIR}/${MARKETPLACE_APP}/group_vars/gluster/vars"
-readonly secret_vars="${WORK_DIR}/${MARKETPLACE_APP}/group_vars/gluster/secret_vars"
+readonly group_vars="${WORK_DIR}/${MARKETPLACE_APP}/group_vars/linode/vars"
+readonly secret_vars="${WORK_DIR}/${MARKETPLACE_APP}/group_vars/linode/secret_vars"
 
 function provisioner_sshkey {
 	echo "[info] Creating provisioner SSH keys..."
@@ -183,8 +183,7 @@ EOF
 
 function udf {
 	sed 's/  //g' <<EOF >> ${group_vars}
-  sudo_username: ${USER_NAME}
-  username: ${USER_NAME}
+  username: ${USERNAME}
 EOF
 
   if [[ -n ${DOMAIN} ]]; then
@@ -251,7 +250,7 @@ function run {
 
 	# clone repo and set up Ansible environment
 	echo "[info] Cloning ${BRANCH} branch from ${GIT_REPO}..."
-	git -C /tmp clone -b ${BRANCH} ${GIT_REPO}
+	git -C /tmp clone --recurse-submodules -b ${BRANCH} ${GIT_REPO}
 	cd ${WORK_DIR}/${MARKETPLACE_APP}
 	python3 -m venv env
 	source env/bin/activate

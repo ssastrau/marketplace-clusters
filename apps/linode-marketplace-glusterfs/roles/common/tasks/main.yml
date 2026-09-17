@@ -1,5 +1,4 @@
 ---
-# apt_setup_update
 - name: Update system packages
   import_role:
     name: update_pkgs
@@ -19,14 +18,12 @@
       - ufw
     state: latest
 
-# Set _domain variable
 - name: Set _domain variable
   import_role:
     name: setdomain
   run_once: true
   delegate_to: localhost
 
-# dns creation
 - name: Create dns A record
   import_role:
     name: create_dns_record
@@ -36,22 +33,30 @@
   run_once: true
   delegate_to: localhost
 
-# disable root login w/wo pubkey
-- name: Secure ssh
+- name: Create sudo user
+  import_role:
+    name: sudouser
+  run_once: true
+  delegate_to: localhost
+
+- name: Set root password
+  import_role:
+    name: setrootpwd
+
+- name: Add SSH public keys
+  import_role:
+    name: sshkey
+  run_once: true
+  delegate_to: localhost
+
+- name: Disable root login
   import_role:
     name: securessh
   when: disable_root is defined
 
-# ufw_install
-- name: Enabling ufw
-  import_role:
-    name: ufw
-
-# ufw rules
 - name: Apply ufw rules
   import_tasks: ufw_rules.yml
 
-# fail2ban
 - name: Enabling fail2ban
   import_role:
     name: fail2ban_install

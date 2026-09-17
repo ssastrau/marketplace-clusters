@@ -34,7 +34,7 @@ SHELL:
 # user defined
 export TOKEN="YOUR API TOKEN"
 export ROOT_PASS="aComplexP@ssword"
-export SUDO_USERNAME='admin'
+export USERNAME='admin'
 
 export CA_COMMON_NAME='Kafka RootCA'
 export COUNTRY_NAME='US'
@@ -67,7 +67,7 @@ curl -H "Content-Type: application/json" \
         "sslheader": "Yes",
         "ca_common_name": "${CA_COMMON_NAME}",
         "token_password": "${TOKEN}",
-        "sudo_username": "${SUDO_USERNAME}",
+        "username": "${USERNAME}",
         "client_count": "${CLIENT_COUNT}",
         "cluster_size": "${CLUSTER_SIZE}",
         "country_name": "${COUNTRY_NAME}",
@@ -97,7 +97,7 @@ linode-cli linodes create \
         "sslheader": "Yes",
         "ca_common_name": "${CA_COMMON_NAME}",
         "token_password": "${TOKEN}",
-        "sudo_username": "${SUDO_USERNAME}",
+        "username": "${USERNAME}",
         "client_count": "${CLIENT_COUNT}",
         "cluster_size": "${CLUSTER_SIZE}",
         "country_name": "${COUNTRY_NAME}",

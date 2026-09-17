@@ -1,13 +1,26 @@
 ---
-# roles/post/tasks/main.yml
-- name: Adding sudo user
-  import_tasks: sudouser.yml
+- name: Copy MOTD template to /etc/motd
+  template:
+    src: templates/motd.j2
+    dest: /etc/motd
+    mode: '0644'
+  delegate_to: localhost
+  run_once: true
 
-- name: Adding user ssh keys
-  import_tasks: sshkeys.yml
+- name: Writing deployment credentials locally
+  blockinfile:
+    path: "/home/{{ username }}/.credentials"
+    create: true
+    owner: "{{ username }}"
+    group: "{{ username }}"
+    mode: '0644'
+    block: |
+      # system user
+      sudo username: {{ username }}
+      sudo password: {{ password }}
 
-- name: Adding motd to /etc
-  import_tasks: motd.yml
-
-- name: Dumpimg credentials locally
-  import_tasks: creds.yml
+      # spark user
+      spark user: {{ spark_user }}
+      spark ui password: {{ spark_ui_password }}
+  delegate_to: localhost
+  run_once: true

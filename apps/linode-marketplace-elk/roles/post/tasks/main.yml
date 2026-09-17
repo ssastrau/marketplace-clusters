@@ -7,6 +7,8 @@
 - name: Add SSH public keys
   import_role:
     name: sshkey
+  run_once: true
+  delegate_to: localhost
 
 - name: Disable root login
   import_role:
@@ -21,6 +23,8 @@
     mode: '0600'
     owner: '{{ username }}'
     group: '{{ username }}'
+  run_once: true
+  delegate_to: localhost
 
 - name: Writing creds into file
   copy:
@@ -39,3 +43,5 @@
       Logstash ingest user: {{ logstash_ingest_username }}
       Logstash ingest password: {{ logstash_ingest_password }}
       {%endif %}
+  run_once: true
+  delegate_to: localhost

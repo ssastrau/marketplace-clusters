@@ -4,8 +4,8 @@
   hosts: localhost
   connection: local
   vars_files:
-    - group_vars/postgresql/vars
-    - group_vars/postgresql/secret_vars
+    - group_vars/linode/vars
+    - group_vars/linode/secret_vars
   vars:
     count: '{{ cluster_size - 1 }}'
   tasks:

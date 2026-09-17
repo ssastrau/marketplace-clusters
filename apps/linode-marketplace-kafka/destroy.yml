@@ -3,7 +3,7 @@
 - name: Destroying kafka instances
   hosts: localhost
   connection: local
-  vars_files: [group_vars/kafka/vars]
+  vars_files: [group_vars/linode/vars]
 
   vars:
     count: '{{ cluster_size - 1 }}'

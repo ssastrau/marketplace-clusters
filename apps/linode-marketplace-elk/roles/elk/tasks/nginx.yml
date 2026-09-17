@@ -26,11 +26,10 @@
   when: inventory_hostname in groups['provisioner']
   notify: Restart nginx
 
-# Configure SSL
-
 - name: Configuring SSL on {{ _domain }}
   import_role:
     name: certbot_ssl
+  run_once: true
+  delegate_to: "{{ groups['provisioner'][0] }}"
   vars:
-    host: "{{ groups['provisioner'][0] }}"
     webserver_stack: lemp

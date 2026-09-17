@@ -23,7 +23,7 @@ fi
 ## deployment variables
 # <UDF name="cassandra_version" label="cassandra version" default="4.1.5" oneof="4.1.5" />
 # <UDF name="token_password" label="Your Linode API token" />
-# <UDF name="sudo_username" label="The limited sudo user to be created in the cluster" />
+# <UDF name="username" label="The limited sudo user to be created in the cluster" />
 # <UDF name="db_superuser" label="The superuser for database cluster" />
 
 ## ssl variables
@@ -136,7 +136,7 @@ function rename_provisioner {
 }
 
 readonly TEMP_ROOT_PASS=$(openssl rand -base64 32)
-readonly group_vars="${WORK_DIR}/${MARKETPLACE_APP}/group_vars/apache-cassandra/vars"
+readonly group_vars="${WORK_DIR}/${MARKETPLACE_APP}/group_vars/linode/vars"
 
 function destroy {
 	cd ${WORK_DIR}/${MARKETPLACE_APP}
@@ -184,7 +184,7 @@ function udf {
   cluster_size: ${CLUSTER_SIZE}
   client_count: ${CLIENT_COUNT}
 
-  sudo_username: ${SUDO_USERNAME}
+  username: ${USERNAME}
   country_name: ${COUNTRY_NAME}
   state_or_province_name: ${STATE_OR_PROVINCE_NAME}
   locality_name: ${LOCALITY_NAME}
@@ -249,7 +249,7 @@ function run {
 
 	# clone repo and set up Ansible environment
 	echo "[info] Cloning ${BRANCH} branch from ${GIT_REPO}..."
-	git -C /tmp clone -b ${BRANCH} ${GIT_REPO}
+	git -C /tmp clone --recurse-submodules -b ${BRANCH} ${GIT_REPO}
 	cd ${WORK_DIR}/${MARKETPLACE_APP}
 	python3 -m venv env
 	source env/bin/activate

@@ -17,12 +17,6 @@ fi
 
 declare -A UDF_VARS
 
-if [[ -n "${USER_NAME}" ]]; then
-        UDF_VARS["USER_NAME"]="${USER_NAME}"
-else
-        UDF_VARS["USER_NAME"]="admin" # default
-fi
-
 if [[ -n "${DISABLE_ROOT}" ]]; then
         UDF_VARS["DISABLE_ROOT"]="${DISABLE_ROOT}"
 else
@@ -43,10 +37,10 @@ else
         UDF_VARS["SOA_EMAIL_ADDRESS"]="webmaster@${DEFAULT_DNS}" # default
 fi
 
-if [[ -n "${SUDO_USERNAME}" ]]; then
-        UDF_VARS["SUDO_USERNAME"]="${SUDO_USERNAME}"
+if [[ -n "${USERNAME}" ]]; then
+        UDF_VARS["USERNAME"]="${USERNAME}"
 else
-        UDF_VARS["SUDO_USERNAME"]="admin" # default
+        UDF_VARS["USERNAME"]="admin" # default
 fi
 
 if [[ -n "${ADD_SSH_KEYS}" ]]; then

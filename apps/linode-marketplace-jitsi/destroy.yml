@@ -3,7 +3,7 @@
 - name: Destroying linodes
   hosts: localhost
   connection: local
-  vars_files: [group_vars/jitsi/vars, group_vars/jitsi/secret_vars]
+  vars_files: [group_vars/linode/vars, group_vars/linode/secret_vars]
   vars:
     jitsi_count: 1
     jvb_count: '{{ cluster_size - jitsi_count }}'

@@ -23,7 +23,7 @@ fi
 ## deployment variables
 # <UDF name="kafka_version" label="Kafka version" default="3.8.0" oneof="3.8.0" />
 # <UDF name="token_password" label="Your Linode API token" />
-# <UDF name="sudo_username" label="The limited account user" default='admin'>
+# <UDF name="username" label="The limited account user" default='admin'>
 # <UDF name="client_count" label="Number of clients connecting to Kafka">
 # <UDF name="cluster_size" label="Kafka cluster size" oneOf="3,5,7">
 # <UDF name="clusterheader" label="Cluster Settings" default="Yes" header="Yes">
@@ -132,7 +132,7 @@ function rename_provisioner {
 }
 
 readonly TEMP_ROOT_PASS=$(openssl rand -base64 32)
-readonly group_vars="${WORK_DIR}/${MARKETPLACE_APP}/group_vars/kafka/vars"
+readonly group_vars="${WORK_DIR}/${MARKETPLACE_APP}/group_vars/linode/vars"
 
 function destroy {
 	cd ${WORK_DIR}/${MARKETPLACE_APP}
@@ -180,7 +180,7 @@ EOF
 function udf {
 	sed 's/  //g' <<EOF >>${group_vars}
   # sudo username
-  sudo_username: ${SUDO_USERNAME}
+  username: ${USERNAME}
   country_name: ${COUNTRY_NAME}
   state_or_province_name: ${STATE_OR_PROVINCE_NAME}
   locality_name: ${LOCALITY_NAME}
@@ -245,7 +245,7 @@ function run {
 
 	# clone repo and set up Ansible environment
 	echo "[info] Cloning ${BRANCH} branch from ${GIT_REPO}..."
-	git -C /tmp clone -b ${BRANCH} ${GIT_REPO}
+	git -C /tmp clone --recurse-submodules -b ${BRANCH} ${GIT_REPO}
 	cd ${WORK_DIR}/${MARKETPLACE_APP}
 	python3 -m venv env
 	source env/bin/activate

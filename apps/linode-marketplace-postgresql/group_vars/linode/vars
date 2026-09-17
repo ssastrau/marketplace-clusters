@@ -1,5 +1,5 @@
 ---
-# group_vars/postgresql/vars
+# group_vars/linode/vars
 
 # Linode vars
 ssh_keys:
@@ -10,4 +10,4 @@ region:
 image:
 linode_tags:
 # sudo user
-sudo_username:
+username:
