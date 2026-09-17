@@ -1,10 +1,14 @@
 ---
-# roles/post/tasks/main.yml
-- name: Adding sudo user
-  import_tasks: sudouser.yml
-
-- name: Add user ssh keys
-  import_tasks: sshkeys.yml
-
-- name: Dumpimg credentials locally
-  import_tasks: creds.yml
+- name: Writing deployment credentils locally
+  blockinfile:
+    path: '/home/{{ username }}/.deployment-secrets.txt'
+    create: true
+    owner: '{{ username }}'
+    group: '{{ username }}'
+    mode: '0644'
+    block: |
+      # system user
+      username: {{ username }}
+      password: {{ password }}
+  run_once: true
+  delegate_to: localhost

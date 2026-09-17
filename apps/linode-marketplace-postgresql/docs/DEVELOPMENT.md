@@ -28,17 +28,17 @@ molecule test -s debian11
 ## Testing on Linode
 If you cannot use the Molecule approach due to limitations in your local environment, you can instead provision and test against Linodes on your account. Note that billing will occur for any Linode instances that remain on the account longer than one hour.
 
-The approach requires putting real values into the `.valut-pass`, `group_vars/postgresql/vars` and `group_vars/postgresql/secret_vars`. 
+The approach requires putting real values into the `.valut-pass`, `group_vars/linode/vars` and `group_vars/linode/secret_vars`. 
 
 > :warning: WARNING: Clear these values before pushing changes to your fork in order to avoid exposing sensitive information.
 
 Put your [vault](https://docs.ansible.com/ansible/latest/user_guide/vault.html#encrypting-content-with-ansible-vault) password in the `.vault-pass` file. Encrypt your Linode root password and valid [APIv4 token](https://www.linode.com/docs/guides/getting-started-with-the-linode-api/#create-an-api-token) with `ansible-vault`. Replace the value of `@R34llyStr0ngP455w0rd!` with your own strong password and `pYPE7TvjNzmhaEc1rW4i` with your own access token.
 ```
-ansible-vault encrypt_string '@R34llyStr0ngP455w0rd!' --name 'root_pass' >> group_vars/postgresql/secret_vars
-ansible-vault encrypt_string 'pYPE7TvjNzmhaEc1rW4i' --name 'token' >> group_vars/postgresql/secret_vars
+ansible-vault encrypt_string '@R34llyStr0ngP455w0rd!' --name 'root_pass' >> group_vars/linode/secret_vars
+ansible-vault encrypt_string 'pYPE7TvjNzmhaEc1rW4i' --name 'token' >> group_vars/linode/secret_vars
 ```
 
-Configure the Linode instance [parameters](https://github.com/linode/ansible_linode/blob/master/docs/instance.rst#id3), `instance_prefix`, `cluster_name`, and SSL/TLS variables in `group_vars/postgresql/vars`. As with the above, replace the example values with your own. This playbook was written to support `linode/debian11` image.
+Configure the Linode instance [parameters](https://github.com/linode/ansible_linode/blob/master/docs/instance.rst#id3), `instance_prefix`, `cluster_name`, and SSL/TLS variables in `group_vars/linode/vars`. As with the above, replace the example values with your own. This playbook was written to support `linode/debian11` image.
 ```
 # linode vars
 ssh_keys: ssh-rsa AAAA_valid_public_ssh_key_123456785== user@their-computer
