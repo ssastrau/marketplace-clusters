@@ -4,5 +4,5 @@
   hosts: kafka
   any_errors_fatal: true
   user: root
-  vars_files: [group_vars/kafka/vars]
+  vars_files: [group_vars/linode/vars]
   roles: [common, kafka, post]
