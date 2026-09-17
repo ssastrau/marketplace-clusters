@@ -183,7 +183,6 @@ EOF
 
 function udf {
 	sed 's/  //g' <<EOF >> ${group_vars}
-  sudo_username: ${USERNAME}
   username: ${USERNAME}
 EOF
 
