@@ -130,7 +130,7 @@ function rename_provisioner {
 }
 
 readonly TEMP_ROOT_PASS=$(openssl rand -base64 32)
-readonly group_vars="${WORK_DIR}/${MARKETPLACE_APP}/group_vars/jitsi/vars"
+readonly group_vars="${WORK_DIR}/${MARKETPLACE_APP}/group_vars/linode/vars"
 
 function destroy {
 	cd ${WORK_DIR}/${MARKETPLACE_APP}
@@ -169,7 +169,7 @@ EOF
 }
 
 function secrets {
-  local SECRET_VARS_PATH="./group_vars/jitsi/secret_vars"
+  local SECRET_VARS_PATH="./group_vars/linode/secret_vars"
   local VAULT_PASS=$(openssl rand -base64 32)
   local PASSWORD=$(openssl rand -base64 32)
   echo "${VAULT_PASS}" > ./.vault-pass

@@ -1,9 +1,20 @@
 ---
-- name: Adding sudo user
-  import_tasks: sudouser.yml
-
-- name: Add user ssh keys
-  import_tasks: sshkeys.yml
+- name: Copy MOTD template to /etc/motd
+  template:
+    src: templates/motd.j2
+    dest: /etc/motd
+    mode: '0600'
+  run_once: true
+  delegate_to: localhost
 
 - name: Writing jitsi creds into file
-  import_tasks: motd.yml
+  copy:
+    dest: "/home/{{ username }}/.credentials"
+    mode: '0600'
+    owner: "{{ username }}"
+    group: "{{ username }}"
+    content: |
+      sudo username: {{ username }}
+      sudo password: {{ password }}
+  run_once: true
+  delegate_to: localhost
