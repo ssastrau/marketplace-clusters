@@ -22,7 +22,7 @@ fi
 
 ## Deployment Variables
 # <UDF name="token_password" label="Your Linode API token" />
-# <UDF name="sudo_username" label="The limited sudo user to be created in the cluster" />
+# <UDF name="username" label="The limited sudo user to be created in the cluster" />
 # <UDF name="clusterheader" label="Cluster Settings" default="Yes" header="Yes">
 # <UDF name="add_ssh_keys" label="Add Account SSH Keys to All Nodes?" oneof="yes,no"  default="yes" />
 # <UDF name="cluster_size" label="Nomad Client Count" default="3" oneof="3,5,7" />
@@ -137,7 +137,7 @@ function tag_provisioner {
 
 readonly NOMAD_VERSION='1.5.2'
 readonly TEMP_ROOT_PASS=$(openssl rand -base64 32)
-readonly group_vars="${WORK_DIR}/${MARKETPLACE_APP}/group_vars/nomad/vars"
+readonly group_vars="${WORK_DIR}/${MARKETPLACE_APP}/group_vars/linode/vars"
 
 function destroy {
 	cd ${WORK_DIR}/${MARKETPLACE_APP}
@@ -174,7 +174,7 @@ EOF
 }
 
 function secrets {
-  local SECRET_VARS_PATH="./group_vars/nomad/secret_vars"
+  local SECRET_VARS_PATH="./group_vars/linode/secret_vars"
   local VAULT_PASS=$(openssl rand -base64 32)
   echo "${VAULT_PASS}" > ./.vault-pass
   cat << EOF > ${SECRET_VARS_PATH}
@@ -191,7 +191,7 @@ function udf {
   cluster_size: ${CLUSTER_SIZE}
   is_provisioner: 'true'
   consul_nomad_autojoin_token: ${CONSUL_NOMAD_AUTOJOIN_TOKEN_PASSWORD}
-  sudo_username: ${SUDO_USERNAME}
+  username: ${USERNAME}
   add_keys_prompt: ${ADD_SSH_KEYS}
 EOF
 

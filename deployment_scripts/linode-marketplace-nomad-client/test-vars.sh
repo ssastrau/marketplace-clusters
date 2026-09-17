@@ -15,10 +15,10 @@ fi
 
 declare -A UDF_VARS
 
-if [[ -n "${SUDO_USERNAME}" ]]; then
-        UDF_VARS["SUDO_USERNAME"]="${SUDO_USERNAME}"
+if [[ -n "${USERNAME}" ]]; then
+        UDF_VARS["USERNAME"]="${USERNAME}"
 else
-        UDF_VARS["SUDO_USERNAME"]="admin" # default
+        UDF_VARS["USERNAME"]="admin" # default
 fi
 
 if [[ -n "${DISABLE_ROOT}" ]]; then
