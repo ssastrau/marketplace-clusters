@@ -5,7 +5,7 @@
 - name: Pre-check
   hosts: galera_servers
   user: root
-  vars_files: [group_vars/galera/vars, group_vars/galera/secret_vars]
+  vars_files: [group_vars/linode/vars, group_vars/linode/secret_vars]
   roles:
     - precheck
 
@@ -16,5 +16,5 @@
   user: root
   vars:
     local_home: "{{ lookup('env','HOME') }}"
-  vars_files: [group_vars/galera/vars, group_vars/galera/secret_vars]
+  vars_files: [group_vars/linode/vars, group_vars/linode/secret_vars]
   roles: [common, db, post]

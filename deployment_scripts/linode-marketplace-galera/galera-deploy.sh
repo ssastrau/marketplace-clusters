@@ -22,6 +22,7 @@ fi
 
 ## Deployment Variables
 # <UDF name="cluster_name" label="Cluster Name" />
+# <UDF name="username" label="The limited sudo user to be created in the cluster: *No Capital Letters or Special Characters*">
 # <UDF name="token_password" label="Your Linode API token" />
 # <UDF name="add_ssh_keys" label="Add Account SSH Keys to All Nodes?" oneof="yes,no"  />
 # <UDF name="disable_root" label="Disable root access over SSH?" oneOf="Yes,No" default="No">
@@ -148,13 +149,14 @@ function provisioner_sshkey {
 	echo -e "\nprivate_key_file = ${SSH_KEY_PATH}" >>${WORK_DIR}/${MARKETPLACE_APP}/ansible.cfg
 }
 
-readonly group_vars="${WORK_DIR}/${MARKETPLACE_APP}/group_vars/galera/vars"
+readonly group_vars="${WORK_DIR}/${MARKETPLACE_APP}/group_vars/linode/vars"
 
 function provisioner_vars {
   local LINODE_PARAMS=($(curl -sH "Authorization: Bearer ${TOKEN_PASSWORD}" "https://api.linode.com/v4/linode/instances/${LINODE_ID}" | jq -r .type,.region,.image))
   local TAGS=$(curl -sH "Authorization: Bearer ${TOKEN_PASSWORD}" "https://api.linode.com/v4/linode/instances/${LINODE_ID}" | jq -r .tags)
 	sed 's/  //g' <<EOF >${group_vars}
   uuid: ${UUID}
+  username: ${USERNAME}
   ssh_keys: ${PROVISIONER_SSH_PUB_KEY}
   type: ${LINODE_PARAMS[0]}
   region: ${LINODE_PARAMS[1]}
@@ -166,7 +168,7 @@ EOF
 }
 
 function secrets {
-  local SECRET_VARS_PATH="./group_vars/galera/secret_vars"
+  local SECRET_VARS_PATH="./group_vars/linode/secret_vars"
   local VAULT_PASS=$(openssl rand -base64 32)
   local TEMP_ROOT_PASS=$(openssl rand -base64 32)
   echo "${VAULT_PASS}" > ./.vault-pass

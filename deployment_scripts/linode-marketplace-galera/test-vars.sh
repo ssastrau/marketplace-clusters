@@ -29,6 +29,12 @@ else
         UDF_VARS["CLUSTER_NAME"]="Galera Cluster"
 fi
 
+if [[ -n "${USERNAME}" ]]; then
+        UDF_VARS["USERNAME"]="${USERNAME}"
+else
+        UDF_VARS["USERNAME"]="admin" # default
+fi
+
 if [[ -n "${TOKEN_PASSWORD}" ]]; then
         UDF_VARS["TOKEN_PASSWORD"]="${TOKEN_PASSWORD}"
 elif [[ -n "${LINODE_API_SECRET}" ]]; then

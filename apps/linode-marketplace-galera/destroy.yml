@@ -3,7 +3,7 @@
 - name: Destroy galera linodes
   hosts: localhost
   connection: local
-  vars_files: [group_vars/galera/vars, group_vars/galera/secret_vars]
+  vars_files: [group_vars/linode/vars, group_vars/linode/secret_vars]
   vars:
     count: '{{ cluster_size - 1 }}'
   tasks:
