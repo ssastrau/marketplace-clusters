@@ -17,7 +17,7 @@
 
 - name: Write to vars to validate play
   ansible.builtin.lineinfile:
-    path: /tmp/marketplace-clusters/apps/linode-marketplace-nomad/group_vars/nomad/vars
+    path: /tmp/marketplace-clusters/apps/linode-marketplace-nomad/group_vars/linode/vars
     insertafter: EOF
     line: 'consul_bootstrap_token: {{ consul_bootstrap_token[0] }}'
   run_once: true
@@ -54,7 +54,7 @@
 
 - name: Write to vars to validate play
   ansible.builtin.lineinfile:
-    path: /tmp/marketplace-clusters/apps/linode-marketplace-nomad/group_vars/nomad/vars
+    path: /tmp/marketplace-clusters/apps/linode-marketplace-nomad/group_vars/linode/vars
     insertafter: EOF
     line: 'consul_nomad_autojoin_token: {{ consul_nomad_autojoin_token[0] }}'
   run_once: true

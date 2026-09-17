@@ -8,9 +8,9 @@
   user: root
   vars:
     local_home: "{{ lookup('env','HOME') }}"
-  vars_files: [group_vars/nomad/vars, group_vars/nomad/secret_vars]
+  vars_files: [group_vars/linode/vars, group_vars/linode/secret_vars]
   roles:
-    - common
+    - {role: 'common', tags: 'cluster'}
     - {role: 'consul', tags: 'cluster'}
     - {role: 'nomad', tags: 'cluster'}
     - post
