@@ -2,7 +2,7 @@
 # create galera linodes
 - name: Create galera linodes
   hosts: localhost
-  vars_files: [group_vars/galera/vars, group_vars/galera/secret_vars]
+  vars_files: [group_vars/linode/vars, group_vars/linode/secret_vars]
   vars:
     count: '{{ cluster_size }}'
 
@@ -53,7 +53,7 @@
 
     - name: Update group_vars
       blockinfile:
-        path: ./group_vars/galera/vars
+        path: ./group_vars/linode/vars
         marker: '# {mark} INSTANCE VARS'
         block: |
           # hostnames

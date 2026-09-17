@@ -1,7 +1,4 @@
 ---
-# roles/common/tasks/main.yml
-
-# common tasks for all linodes
 - name: Force ipv4 with apt
   copy:
     content: Acquire::ForceIPv4 "true";
@@ -25,13 +22,27 @@
       - python3-pymysql
     state: present
 
-# disable root login w/wo pubkey
-- name: Secure ssh
+- name: Create sudo user
+  import_role:
+    name: sudouser
+  run_once: true
+  delegate_to: localhost
+
+- name: Set root password
+  import_role:
+    name: setrootpwd
+
+- name: Add SSH public keys
+  import_role:
+    name: sshkey
+  run_once: true
+  delegate_to: localhost
+
+- name: Disable root login
   import_role:
     name: securessh
   when: disable_root is defined
 
-# fail2ban
 - name: Enabling fail2ban
   import_role:
     name: fail2ban_install

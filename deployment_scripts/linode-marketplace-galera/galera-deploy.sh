@@ -148,7 +148,7 @@ function provisioner_sshkey {
 	echo -e "\nprivate_key_file = ${SSH_KEY_PATH}" >>${WORK_DIR}/${MARKETPLACE_APP}/ansible.cfg
 }
 
-readonly group_vars="${WORK_DIR}/${MARKETPLACE_APP}/group_vars/galera/vars"
+readonly group_vars="${WORK_DIR}/${MARKETPLACE_APP}/group_vars/linode/vars"
 
 function provisioner_vars {
   local LINODE_PARAMS=($(curl -sH "Authorization: Bearer ${TOKEN_PASSWORD}" "https://api.linode.com/v4/linode/instances/${LINODE_ID}" | jq -r .type,.region,.image))
@@ -166,7 +166,7 @@ EOF
 }
 
 function secrets {
-  local SECRET_VARS_PATH="./group_vars/galera/secret_vars"
+  local SECRET_VARS_PATH="./group_vars/linode/secret_vars"
   local VAULT_PASS=$(openssl rand -base64 32)
   local TEMP_ROOT_PASS=$(openssl rand -base64 32)
   echo "${VAULT_PASS}" > ./.vault-pass
