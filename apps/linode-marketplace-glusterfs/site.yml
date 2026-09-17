@@ -5,7 +5,7 @@
 - name: Pre-check
   hosts: gluster_servers
   user: root
-  vars_files: [group_vars/gluster/vars, group_vars/gluster/secret_vars]
+  vars_files: [group_vars/linode/vars, group_vars/linode/secret_vars]
   roles:
     - precheck
 
@@ -15,5 +15,5 @@
   user: root
   vars:
     local_home: "{{ lookup('env','HOME') }}"
-  vars_files: [group_vars/gluster/vars, group_vars/gluster/secret_vars]
+  vars_files: [group_vars/linode/vars, group_vars/linode/secret_vars]
   roles: [common, gluster, post]
