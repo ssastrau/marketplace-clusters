@@ -20,7 +20,7 @@ fi
 ## Deployment Variables
 # <UDF name="token_password" label="Your Linode API token" />
 # <UDF name="cluster_name" label="Domain Name" />
-# <UDF name="sudo_username" label="The limited sudo user to be created in the cluster" />
+# <UDF name="username" label="The limited sudo user to be created in the cluster" />
 # <UDF name="add_ssh_keys" label="Add Account SSH Keys to All Nodes?" oneof="yes,no"  default="yes" />
 # <UDF name="cluster_size" label="PostgeSQL cluster size" default="3" oneof="3" />
 
@@ -138,7 +138,7 @@ function provisioner_sshkey {
 	echo -e "\nprivate_key_file = ${SSH_KEY_PATH}" >>${WORK_DIR}/${MARKETPLACE_APP}/ansible.cfg
 }
 
-readonly group_vars="${WORK_DIR}/${MARKETPLACE_APP}/group_vars/postgresql/vars"
+readonly group_vars="${WORK_DIR}/${MARKETPLACE_APP}/group_vars/linode/vars"
 
 function provisioner_vars {
   local LINODE_PARAMS=($(curl -sH "Authorization: Bearer ${TOKEN_PASSWORD}" "https://api.linode.com/v4/linode/instances/${LINODE_ID}" | jq -r .type,.region,.image))
@@ -155,7 +155,7 @@ EOF
 }
 
 function secrets {
-  local SECRET_VARS_PATH="./group_vars/postgresql/secret_vars"
+  local SECRET_VARS_PATH="./group_vars/linode/secret_vars"
   local VAULT_PASS=$(openssl rand -base64 32)
   local TEMP_ROOT_PASS=$(openssl rand -base64 32)
   local REPMGRD_PASS=$(openssl rand -base64 32)
@@ -169,7 +169,7 @@ EOF
 
 function udf {
 	sed 's/  //g' <<EOF >>${group_vars}
-  sudo_username: ${SUDO_USERNAME}
+  username: ${USERNAME}
   cluster_name: ${CLUSTER_NAME}
   cluster_size: ${CLUSTER_SIZE}
 EOF
