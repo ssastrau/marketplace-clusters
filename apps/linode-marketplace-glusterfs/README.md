@@ -61,7 +61,7 @@ ansible-vault encrypt_string '@R34llyStr0ngP455w0rd!' --name 'root_pass'
 ansible-vault encrypt_string 'pYPE7TvjNzmhaEc1rW4i' --name 'token'
 ```
 
-Copy the generated outputs to the `group_vars/gluster/secret_vars` file.
+Copy the generated outputs to the `group_vars/linode/secret_vars` file.
 ```
 root_pass: !vault |
           $ANSIBLE_VAULT;1.1;AES256
@@ -81,7 +81,7 @@ token: !vault |
           6365653234666565353634653030316638326662316165386637
 ```
 
-Configure the Linode instance [parameters](https://github.com/linode/ansible_linode/blob/master/docs/instance.rst#id3), `server` and `client` prefixes, and `cluster_name` variables in `group_vars/gluster/vars`. As with the above, replace the example values with your own. This playbook was written to support `linode/ubuntu24.04` image.
+Configure the Linode instance [parameters](https://github.com/linode/ansible_linode/blob/master/docs/instance.rst#id3), `server` and `client` prefixes, and `cluster_name` variables in `group_vars/linode/vars`. As with the above, replace the example values with your own. This playbook was written to support `linode/ubuntu24.04` image.
 ```
 ssh_keys: ssh-rsa AAAA_valid_public_ssh_key_123456785== user@their-computer
 server_prefix: gluster

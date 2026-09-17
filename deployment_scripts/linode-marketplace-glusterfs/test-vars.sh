@@ -25,10 +25,10 @@ else
         UDF_VARS["TOKEN_PASSWORD"]="HugsAreWorthMoreThanHandshakes" # default
 fi
 
-if [[ -n "${USER_NAME}" ]]; then
-        UDF_VARS["USER_NAME"]="${USER_NAME}"
+if [[ -n "${USERNAME}" ]]; then
+        UDF_VARS["USERNAME"]="${USERNAME}"
 else
-        UDF_VARS["USER_NAME"]="admin" # default
+        UDF_VARS["USERNAME"]="admin" # default
 fi
 
 if [[ -n "${ADD_SSH_KEYS}" ]]; then

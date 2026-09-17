@@ -3,7 +3,7 @@
 - name: Destroying gluster instances
   hosts: localhost
   connection: local
-  vars_files: [group_vars/gluster/vars, group_vars/gluster/secret_vars]
+  vars_files: [group_vars/linode/vars, group_vars/linode/secret_vars]
   vars:
     count: '{{ cluster_size - 1 }}'
 
